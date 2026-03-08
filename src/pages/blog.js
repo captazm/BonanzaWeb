@@ -1,8 +1,9 @@
 import { t } from '../i18n.js';
 import { getPosts } from '../data/store.js';
 
-export function renderBlog() {
-  const posts = getPosts().filter((p) => p.published);
+export async function renderBlog() {
+  const allPosts = await getPosts();
+  const posts = allPosts.filter((p) => p.published);
 
   return `
     <section class="blog-page section">

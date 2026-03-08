@@ -1,18 +1,6 @@
 import { t } from '../i18n.js';
 
-const productIcons = {
-  palma2pro: '📱',
-  palma2: '📱',
-  noteair5c: '📝',
-  notemax: '📋',
-  tabxc: '💻',
-  gocolor7: '📖',
-  go7: '📖',
-  page: '📖',
-};
-
 export function renderProductCard(product, index = 0) {
-  const icon = productIcons[product.image] || '📱';
   const badgeClass = product.badge ? `badge-${product.badge.toLowerCase()}` : '';
   const staggerClass = `stagger-${(index % 6) + 1}`;
 
@@ -32,7 +20,7 @@ export function renderProductCard(product, index = 0) {
         ${product.badge ? `<span class="badge ${badgeClass}">${product.badge}</span>` : ''}
       </div>
       <div class="product-card-image">
-        ${icon}
+        <img src="${product.image}" alt="${product.name}" loading="lazy">
       </div>
       <div class="product-card-name">${product.name}</div>
       <div class="product-card-tagline">${product.tagline}</div>

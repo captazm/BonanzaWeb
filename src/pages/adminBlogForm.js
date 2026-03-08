@@ -1,28 +1,28 @@
 import { getPosts, savePost } from '../data/store.js';
 
-function getEditPost() {
-    const hash = window.location.hash;
-    const match = hash.match(/id=([^&]+)/);
-    if (!match) return null;
-    const posts = getPosts();
-    return posts.find((p) => p.id === match[1]) || null;
+async function getEditPost() {
+  const hash = window.location.hash;
+  const match = hash.match(/id=([^&]+)/);
+  if (!match) return null;
+  const posts = await getPosts();
+  return posts.find((p) => p.id === match[1]) || null;
 }
 
-export function renderAdminBlogForm() {
-    const post = getEditPost();
-    const isEdit = !!post;
+export async function renderAdminBlogForm() {
+  const post = await getEditPost();
+  const isEdit = !!post;
 
-    const p = post || {
-        id: '',
-        title: '',
-        excerpt: '',
-        content: '',
-        category: 'News',
-        featuredImage: '',
-        published: false,
-    };
+  const p = post || {
+    id: '',
+    title: '',
+    excerpt: '',
+    content: '',
+    category: 'News',
+    featuredImage: '',
+    published: false,
+  };
 
-    return `
+  return `
     <section class="admin-form-page">
       <div class="admin-form-container">
         <div class="admin-form-header">
@@ -97,61 +97,62 @@ Example:
 }
 
 export function initAdminBlogForm() {
-    const form = document.getElementById('blog-form');
-    const existingPost = getEditPost();
-    const contentArea = document.getElementById('b-content');
+  const form = document.getElementById('blog-form');
+  const contentArea = document.getElementById('b-content');
 
+  getEditPost().then(existingPost => {
     // Toolbar actions
     document.querySelectorAll('.toolbar-btn').forEach((btn) => {
-        btn.addEventListener('click', () => {
-            if (!contentArea) return;
-            const start = contentArea.selectionStart;
-            const end = contentArea.selectionEnd;
-            const selected = contentArea.value.substring(start, end);
+      btn.addEventListener('click', () => {
+        if (!contentArea) return;
+        const start = contentArea.selectionStart;
+        const end = contentArea.selectionEnd;
+        const selected = contentArea.value.substring(start, end);
 
-            let insert = '';
-            switch (btn.dataset.action) {
-                case 'bold':
-                    insert = `<strong>${selected || 'bold text'}</strong>`;
-                    break;
-                case 'italic':
-                    insert = `<em>${selected || 'italic text'}</em>`;
-                    break;
-                case 'heading':
-                    insert = `<h2>${selected || 'Heading'}</h2>`;
-                    break;
-                case 'list':
-                    insert = `<ul>\n  <li>${selected || 'Item'}</li>\n  <li>Item</li>\n</ul>`;
-                    break;
-                case 'link':
-                    insert = `<a href="URL">${selected || 'Link text'}</a>`;
-                    break;
-            }
+        let insert = '';
+        switch (btn.dataset.action) {
+          case 'bold':
+            insert = `<strong>${selected || 'bold text'}</strong>`;
+            break;
+          case 'italic':
+            insert = `<em>${selected || 'italic text'}</em>`;
+            break;
+          case 'heading':
+            insert = `<h2>${selected || 'Heading'}</h2>`;
+            break;
+          case 'list':
+            insert = `<ul>\n  <li>${selected || 'Item'}</li>\n  <li>Item</li>\n</ul>`;
+            break;
+          case 'link':
+            insert = `<a href="URL">${selected || 'Link text'}</a>`;
+            break;
+        }
 
-            contentArea.value = contentArea.value.substring(0, start) + insert + contentArea.value.substring(end);
-            contentArea.focus();
-        });
+        contentArea.value = contentArea.value.substring(0, start) + insert + contentArea.value.substring(end);
+        contentArea.focus();
+      });
     });
 
-    form?.addEventListener('submit', (e) => {
-        e.preventDefault();
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
 
-        const id = existingPost
-            ? existingPost.id
-            : `post-${Date.now()}`;
+      const id = existingPost
+        ? existingPost.id
+        : `post-${Date.now()}`;
 
-        const post = {
-            id,
-            title: document.getElementById('b-title').value,
-            excerpt: document.getElementById('b-excerpt').value,
-            content: document.getElementById('b-content').value,
-            category: document.getElementById('b-category').value,
-            featuredImage: document.getElementById('b-image').value,
-            published: document.getElementById('b-published').checked,
-            createdAt: existingPost?.createdAt || new Date().toISOString(),
-        };
+      const post = {
+        id,
+        title: document.getElementById('b-title').value,
+        excerpt: document.getElementById('b-excerpt').value,
+        content: document.getElementById('b-content').value,
+        category: document.getElementById('b-category').value,
+        featuredImage: document.getElementById('b-image').value,
+        published: document.getElementById('b-published').checked,
+        createdAt: existingPost?.createdAt || new Date().toISOString(),
+      };
 
-        savePost(post);
-        window.location.hash = '#admin';
+      await savePost(post);
+      window.location.hash = '#admin';
     });
+  });
 }

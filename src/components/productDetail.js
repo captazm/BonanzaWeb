@@ -1,18 +1,6 @@
 import { t } from '../i18n.js';
 
-const productIcons = {
-  palma2pro: '📱',
-  palma2: '📱',
-  noteair5c: '📝',
-  notemax: '📋',
-  tabxc: '💻',
-  gocolor7: '📖',
-  go7: '📖',
-  page: '📖',
-};
-
 export function renderProductDetail(product) {
-  const icon = productIcons[product.image] || '📱';
   const specs = product.specs;
 
   const specEntries = Object.entries(specs).map(([key, value]) => {
@@ -40,7 +28,14 @@ export function renderProductDetail(product) {
         <button class="modal-close" id="modal-close-btn" aria-label="Close">✕</button>
         
         <div class="modal-header">
-          <div class="modal-product-image">${icon}</div>
+          <div class="modal-product-media">
+            <img src="${product.image}" alt="${product.name}" class="modal-main-image">
+            ${product.video ? `
+              <div class="modal-video-container">
+                <video src="${product.video}" controls poster="${product.image}" class="product-video"></video>
+              </div>
+            ` : ''}
+          </div>
           <div class="modal-product-series">${product.series} ${t('product_series_suffix')}</div>
           <h2 class="modal-product-name">${product.name}</h2>
           <p class="modal-product-tagline">${product.tagline}</p>

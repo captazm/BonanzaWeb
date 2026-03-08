@@ -3,8 +3,8 @@ import { renderHero } from '../components/hero.js';
 import { renderProductCard } from '../components/productCard.js';
 import { getProducts } from '../data/store.js';
 
-export function renderHome() {
-  const products = getProducts();
+export async function renderHome() {
+  const products = await getProducts();
   const featuredProducts = products.filter(p => p.featured);
 
   return `

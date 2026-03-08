@@ -2,8 +2,8 @@ import { t } from '../i18n.js';
 import { renderProductCard } from '../components/productCard.js';
 import { getProducts, seriesInfo } from '../data/store.js';
 
-export function renderProducts() {
-  const products = getProducts();
+export async function renderProducts() {
+  const products = await getProducts();
   const series = ['All', ...Object.keys(seriesInfo)];
 
   return `
@@ -46,31 +46,31 @@ export function initProductsPage() {
     filterBar.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
 
-    const products = getProducts();
+    getProducts().then(products => {
+      // Filter products
+      const filtered = filter === 'All'
+        ? products
+        : products.filter(p => p.series === filter);
 
-    // Filter products
-    const filtered = filter === 'All'
-      ? products
-      : products.filter(p => p.series === filter);
+      grid.innerHTML = filtered.map((p, i) => renderProductCard(p, i)).join('');
 
-    grid.innerHTML = filtered.map((p, i) => renderProductCard(p, i)).join('');
-
-    // Re-observe for scroll animations
-    grid.querySelectorAll('.animate-on-scroll').forEach(el => {
-      el.classList.remove('visible');
-      if (window._scrollObserver) {
-        window._scrollObserver.observe(el);
-      }
-    });
-
-    // Trigger immediate visibility check
-    setTimeout(() => {
+      // Re-observe for scroll animations
       grid.querySelectorAll('.animate-on-scroll').forEach(el => {
-        const rect = el.getBoundingClientRect();
-        if (rect.top < window.innerHeight) {
-          el.classList.add('visible');
+        el.classList.remove('visible');
+        if (window._scrollObserver) {
+          window._scrollObserver.observe(el);
         }
       });
-    }, 50);
+
+      // Trigger immediate visibility check
+      setTimeout(() => {
+        grid.querySelectorAll('.animate-on-scroll').forEach(el => {
+          const rect = el.getBoundingClientRect();
+          if (rect.top < window.innerHeight) {
+            el.classList.add('visible');
+          }
+        });
+      }, 50);
+    });
   });
 }

@@ -12,7 +12,7 @@ import { renderAdminLogin, initAdminLogin } from './src/pages/adminLogin.js';
 import { renderAdmin, initAdmin } from './src/pages/admin.js';
 import { renderAdminProductForm, initAdminProductForm } from './src/pages/adminProductForm.js';
 import { renderAdminBlogForm, initAdminBlogForm } from './src/pages/adminBlogForm.js';
-import { getProducts, isLoggedIn } from './src/data/store.js';
+import { getProducts, isLoggedIn, getMaintenanceMode } from './src/data/store.js';
 import { initTheme } from './src/theme.js';
 
 // Initialize Theme
@@ -30,7 +30,7 @@ function getRoute() {
 
 const ADMIN_ROUTES = ['admin', 'admin-product', 'admin-blog-form'];
 
-function renderPage() {
+async function renderPage() {
     const route = getRoute();
     const isAdmin = ADMIN_ROUTES.includes(route);
     let pageContent = '';
@@ -41,12 +41,43 @@ function renderPage() {
         return;
     }
 
+    // Maintenance mode check (skip for admin routes)
+    if (!isAdmin && route !== 'admin-login') {
+        const inMaintenance = await getMaintenanceMode();
+        if (inMaintenance) {
+            app.innerHTML = `
+                ${renderHeader(route)}
+                <main id="main-content">
+                  <div class="maintenance-page">
+                    <div class="maintenance-inner">
+                      <div class="maintenance-icon">🚧</div>
+                      <h1>Under Maintenance</h1>
+                      <p>We're currently making some improvements to bring you a better experience.<br>We'll be back shortly. Thank you for your patience!</p>
+                      <div class="maintenance-divider"></div>
+                      <p class="maintenance-sub">For urgent inquiries, please contact us via Facebook or Viber.</p>
+                    </div>
+                  </div>
+                </main>
+                ${renderFooter()}
+            `;
+            initHeader(renderPage);
+            return;
+        }
+    }
+
+    // Show loading state
+    app.innerHTML = `
+        <div class="loading-overlay">
+            <div class="loader"></div>
+        </div>
+    `;
+
     switch (route) {
         case 'home':
-            pageContent = renderHome();
+            pageContent = await renderHome();
             break;
         case 'products':
-            pageContent = renderProducts();
+            pageContent = await renderProducts();
             break;
         case 'about':
             pageContent = renderAbout();
@@ -55,25 +86,25 @@ function renderPage() {
             pageContent = renderContact();
             break;
         case 'blog':
-            pageContent = renderBlog();
+            pageContent = await renderBlog();
             break;
         case 'blog-post':
-            pageContent = renderBlogPost();
+            pageContent = await renderBlogPost();
             break;
         case 'admin-login':
             pageContent = renderAdminLogin();
             break;
         case 'admin':
-            pageContent = renderAdmin();
+            pageContent = await renderAdmin();
             break;
         case 'admin-product':
-            pageContent = renderAdminProductForm();
+            pageContent = await renderAdminProductForm();
             break;
         case 'admin-blog-form':
-            pageContent = renderAdminBlogForm();
+            pageContent = await renderAdminBlogForm();
             break;
         default:
-            pageContent = renderHome();
+            pageContent = await renderHome();
     }
 
     // Admin pages: no header/footer
@@ -156,17 +187,18 @@ function initScrollAnimations() {
 // Product Card Click → Modal
 // ========================================
 function initProductCards() {
-    const products = getProducts();
-    document.querySelectorAll('.product-card').forEach((card) => {
-        card.addEventListener('click', () => {
-            const productId = card.dataset.productId;
-            const product = products.find((p) => p.id === productId);
-            if (!product) return;
+    getProducts().then(products => {
+        document.querySelectorAll('.product-card').forEach((card) => {
+            card.addEventListener('click', () => {
+                const productId = card.dataset.productId;
+                const product = products.find((p) => p.id === productId);
+                if (!product) return;
 
-            const modalContainer = document.createElement('div');
-            modalContainer.innerHTML = renderProductDetail(product);
-            document.body.appendChild(modalContainer.firstElementChild);
-            initProductDetail();
+                const modalContainer = document.createElement('div');
+                modalContainer.innerHTML = renderProductDetail(product);
+                document.body.appendChild(modalContainer.firstElementChild);
+                initProductDetail();
+            });
         });
     });
 }

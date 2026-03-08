@@ -1,4 +1,5 @@
 import { t } from '../i18n.js';
+import { saveMessage } from '../data/store.js';
 
 export function renderContact() {
   return `
@@ -93,18 +94,42 @@ export function initContactPage() {
   const form = document.getElementById('contact-form');
   if (!form) return;
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = form.querySelector('button[type="submit"]');
     const originalText = btn.innerHTML;
 
-    btn.innerHTML = t('contact_sent');
-    btn.style.background = 'linear-gradient(135deg, #10b981, #34d399)';
+    // Disable button during submission
+    btn.disabled = true;
+    btn.innerHTML = `
+      <svg class="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+      Sending...
+    `;
+
+    const formData = new FormData(form);
+    const messageData = {
+      name: formData.get('name'),
+      email: formData.get('email'),
+      phone: formData.get('phone'),
+      subject: formData.get('subject'),
+      message: formData.get('message'),
+    };
+
+    const success = await saveMessage(messageData);
+
+    if (success) {
+      btn.innerHTML = t('contact_sent');
+      btn.style.background = 'linear-gradient(135deg, #10b981, #34d399)';
+      form.reset();
+    } else {
+      btn.innerHTML = 'Error Sending';
+      btn.style.background = 'var(--accent-red)';
+    }
 
     setTimeout(() => {
       btn.innerHTML = originalText;
       btn.style.background = '';
-      form.reset();
+      btn.disabled = false;
     }, 3000);
   });
 }

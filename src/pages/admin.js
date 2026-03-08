@@ -1,10 +1,11 @@
-import { getProducts, deleteProduct, getPosts, deletePost, logout } from '../data/store.js';
+import { getProducts, deleteProduct, getPosts, deletePost, getMessages, deleteMessage, markMessageAsRead, subscribeToMessages, logout, getMaintenanceMode, setMaintenanceMode } from '../data/store.js';
 
-export function renderAdmin() {
-    const products = getProducts();
-    const posts = getPosts();
+export async function renderAdmin() {
+  const products = await getProducts();
+  const posts = await getPosts();
+  const maintenanceEnabled = await getMaintenanceMode();
 
-    return `
+  return `
     <section class="admin-page">
       <div class="admin-container">
         <div class="admin-sidebar glass-card">
@@ -17,6 +18,13 @@ export function renderAdmin() {
             </button>
             <button class="admin-nav-btn" data-tab="blog">
               <span>📝</span> Blog Posts
+            </button>
+            <button class="admin-nav-btn" data-tab="messages">
+              <span>💬</span> Messages
+              <span id="msg-badge" class="badge-count" style="display:none">0</span>
+            </button>
+            <button class="admin-nav-btn" data-tab="settings">
+              <span>⚙️</span> Settings
             </button>
             <button class="admin-nav-btn admin-nav-logout" id="admin-logout">
               <span>🚪</span> Sign Out
@@ -38,24 +46,18 @@ export function renderAdmin() {
               <div class="admin-stat-icon">📝</div>
               <div class="admin-stat-info">
                 <span class="admin-stat-value">${posts.length}</span>
-                <span class="admin-stat-label">Blog Posts</span>
+                <span class="admin-stat-label">Posts</span>
               </div>
             </div>
             <div class="admin-stat-card glass-card">
-              <div class="admin-stat-icon">⭐</div>
+              <div class="admin-stat-icon">💬</div>
               <div class="admin-stat-info">
-                <span class="admin-stat-value">${products.filter(p => p.featured).length}</span>
-                <span class="admin-stat-label">Featured</span>
-              </div>
-            </div>
-            <div class="admin-stat-card glass-card">
-              <div class="admin-stat-icon">📢</div>
-              <div class="admin-stat-info">
-                <span class="admin-stat-value">${posts.filter(p => p.published).length}</span>
-                <span class="admin-stat-label">Published</span>
+                <span class="admin-stat-value" id="unread-count">...</span>
+                <span class="admin-stat-label">Inquiries</span>
               </div>
             </div>
           </div>
+
 
           <!-- Products Tab -->
           <div class="admin-tab active" id="tab-products">
@@ -144,52 +146,203 @@ export function renderAdmin() {
               ${posts.length === 0 ? '<p class="admin-empty">No blog posts yet. Click "New Post" to start writing.</p>' : ''}
             </div>
           </div>
+
+          <!-- Messages Tab -->
+          <div class="admin-tab" id="tab-messages">
+            <div class="admin-tab-header">
+              <h2>Contact Inquiries</h2>
+            </div>
+            <div class="admin-messages-list" id="messages-container">
+              <p class="admin-empty">Loading messages...</p>
+            </div>
+          </div>
+
+          <!-- Settings Tab -->
+          <div class="admin-tab" id="tab-settings">
+            <div class="admin-tab-header">
+              <h2>Site Settings</h2>
+            </div>
+            <div class="admin-settings-grid">
+              <div class="admin-setting-card glass-card">
+                <div class="admin-setting-info">
+                  <div class="admin-setting-icon">🚧</div>
+                  <div>
+                    <h3>Maintenance Mode</h3>
+                    <p>When enabled, visitors will see a maintenance notice instead of the website. Admin routes are still accessible.</p>
+                  </div>
+                </div>
+                <label class="admin-toggle" title="Toggle maintenance mode">
+                  <input type="checkbox" id="maintenance-toggle" ${maintenanceEnabled ? 'checked' : ''}>
+                  <span class="admin-toggle-slider"></span>
+                </label>
+              </div>
+              <div class="admin-setting-status glass-card ${maintenanceEnabled ? 'status-on' : 'status-off'}" id="maintenance-status">
+                <span class="status-dot"></span>
+                <span id="maintenance-status-text">${maintenanceEnabled ? 'Site is currently <strong>OFFLINE</strong> — Maintenance mode is active.' : 'Site is currently <strong>ONLINE</strong> — All visitors can browse normally.'}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+      <div id="admin-notifications" class="admin-notifications"></div>
     </section>
   `;
 }
 
 export function initAdmin() {
-    // Tab switching
-    document.querySelectorAll('.admin-nav-btn[data-tab]').forEach((btn) => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.admin-nav-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
-            btn.classList.add('active');
-            const tab = document.getElementById(`tab-${btn.dataset.tab}`);
-            if (tab) tab.classList.add('active');
+  // Tab switching
+  document.querySelectorAll('.admin-nav-btn[data-tab]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.admin-nav-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      const tab = document.getElementById(`tab-${btn.dataset.tab}`);
+      if (tab) tab.classList.add('active');
+    });
+  });
+
+  // Logout
+  document.getElementById('admin-logout')?.addEventListener('click', () => {
+    logout();
+    window.location.hash = '#home';
+  });
+
+  // Delete product
+  document.querySelectorAll('[data-delete-product]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.deleteProduct;
+      if (confirm('Delete this product? This cannot be undone.')) {
+        await deleteProduct(id);
+        window.location.hash = '#admin';
+        // Force re-render
+        window.dispatchEvent(new HashChangeEvent('hashchange'));
+      }
+    });
+  });
+
+  // Delete post
+  document.querySelectorAll('[data-delete-post]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.deletePost;
+      if (confirm('Delete this blog post? This cannot be undone.')) {
+        deletePost(id);
+        window.location.hash = '#admin';
+        window.dispatchEvent(new HashChangeEvent('hashchange'));
+      }
+    });
+  });
+
+  // Real-time messages listener
+  let lastMessageId = null;
+  const unsubscribe = subscribeToMessages((messages) => {
+    const unread = messages.filter(m => m.status === 'unread');
+
+    // Update Badge & Stats
+    const badge = document.getElementById('msg-badge');
+    const stat = document.getElementById('unread-count');
+    if (badge) {
+      badge.textContent = unread.length;
+      badge.style.display = unread.length > 0 ? 'flex' : 'none';
+    }
+    if (stat) stat.textContent = unread.length;
+
+    // Notification Toast for new incoming message
+    const newest = messages[0];
+    if (newest && newest.id !== lastMessageId) {
+      if (lastMessageId !== null && newest.status === 'unread') {
+        showAdminNotification(`New message from ${newest.name}`);
+      }
+      lastMessageId = newest.id;
+    }
+
+    // Render messages list
+    const container = document.getElementById('messages-container');
+    if (container) {
+      if (messages.length === 0) {
+        container.innerHTML = '<p class="admin-empty">No messages yet.</p>';
+      } else {
+        container.innerHTML = messages.map(m => `
+          <div class="message-card glass-card ${m.status === 'unread' ? 'unread' : ''}">
+            <div class="message-card-header">
+              <div class="message-user">
+                <strong>${m.name}</strong>
+                <span>${m.email} | ${m.phone}</span>
+              </div>
+              <div class="message-meta">
+                <span>${new Date(m.createdAt).toLocaleString()}</span>
+                <div class="message-actions">
+                  ${m.status === 'unread' ? `<button class="admin-action-btn" data-read-msg="${m.id}" title="Mark as Read">👁️</button>` : ''}
+                  <button class="admin-action-btn delete" data-delete-msg="${m.id}" title="Delete">🗑️</button>
+                </div>
+              </div>
+            </div>
+            <div class="message-body">
+              <div class="message-subject">Re: ${m.subject || 'General Inquiry'}</div>
+              <p>${m.message}</p>
+            </div>
+          </div>
+        `).join('');
+
+        // Attach listeners to new elements
+        container.querySelectorAll('[data-read-msg]').forEach(b => {
+          b.addEventListener('click', async () => {
+            await markMessageAsRead(b.dataset.readMsg);
+          });
         });
-    });
-
-    // Logout
-    document.getElementById('admin-logout')?.addEventListener('click', () => {
-        logout();
-        window.location.hash = '#home';
-    });
-
-    // Delete product
-    document.querySelectorAll('[data-delete-product]').forEach((btn) => {
-        btn.addEventListener('click', () => {
-            const id = btn.dataset.deleteProduct;
-            if (confirm('Delete this product? This cannot be undone.')) {
-                deleteProduct(id);
-                window.location.hash = '#admin';
-                // Force re-render
-                window.dispatchEvent(new HashChangeEvent('hashchange'));
+        container.querySelectorAll('[data-delete-msg]').forEach(b => {
+          b.addEventListener('click', async () => {
+            if (confirm('Delete this message?')) {
+              await deleteMessage(b.dataset.deleteMsg);
             }
+          });
         });
-    });
+      }
+    }
+  });
 
-    // Delete post
-    document.querySelectorAll('[data-delete-post]').forEach((btn) => {
-        btn.addEventListener('click', () => {
-            const id = btn.dataset.deletePost;
-            if (confirm('Delete this blog post? This cannot be undone.')) {
-                deletePost(id);
-                window.location.hash = '#admin';
-                window.dispatchEvent(new HashChangeEvent('hashchange'));
-            }
-        });
+  // Maintenance mode toggle
+  const toggle = document.getElementById('maintenance-toggle');
+  if (toggle) {
+    toggle.addEventListener('change', async () => {
+      const enabled = toggle.checked;
+      const ok = await setMaintenanceMode(enabled);
+      const statusCard = document.getElementById('maintenance-status');
+      const statusText = document.getElementById('maintenance-status-text');
+      if (ok) {
+        if (statusCard) {
+          statusCard.className = `admin-setting-status glass-card ${enabled ? 'status-on' : 'status-off'}`;
+        }
+        if (statusText) {
+          statusText.innerHTML = enabled
+            ? 'Site is currently <strong>OFFLINE</strong> — Maintenance mode is active.'
+            : 'Site is currently <strong>ONLINE</strong> — All visitors can browse normally.';
+        }
+        showAdminNotification(enabled ? '🚧 Maintenance mode enabled' : '✅ Site is back online');
+      } else {
+        toggle.checked = !enabled; // revert on failure
+        showAdminNotification('⚠️ Failed to update maintenance mode');
+      }
     });
+  }
+
+  // Track unsubscribe for cleanup when page changes
+  window.adminUnsubscribe = unsubscribe;
+}
+
+function showAdminNotification(text) {
+  const container = document.getElementById('admin-notifications');
+  if (!container) return;
+
+  const toast = document.createElement('div');
+  toast.className = 'admin-toast glass-card animate-in';
+  toast.innerHTML = `
+    <span>🔔</span>
+    <p>${text}</p>
+  `;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add('animate-out');
+    setTimeout(() => toast.remove(), 500);
+  }, 5000);
 }

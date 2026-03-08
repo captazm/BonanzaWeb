@@ -1,38 +1,41 @@
 import { getProducts, saveProduct } from '../data/store.js';
 import { seriesInfo } from '../data/products.js';
+import { storage } from '../firebase.js';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
-function getEditProduct() {
-    const hash = window.location.hash;
-    const match = hash.match(/id=([^&]+)/);
-    if (!match) return null;
-    const products = getProducts();
-    return products.find((p) => p.id === match[1]) || null;
+async function getEditProduct() {
+  const hash = window.location.hash;
+  const match = hash.match(/id=([^&]+)/);
+  if (!match) return null;
+  const products = await getProducts();
+  return products.find((p) => p.id === match[1]) || null;
 }
 
-export function renderAdminProductForm() {
-    const product = getEditProduct();
-    const isEdit = !!product;
-    const seriesOptions = Object.keys(seriesInfo);
+export async function renderAdminProductForm() {
+  const product = await getEditProduct();
+  const isEdit = !!product;
+  const seriesOptions = Object.keys(seriesInfo);
 
-    const p = product || {
-        id: '',
-        name: '',
-        series: 'Palma',
-        tagline: '',
-        description: '',
-        price: 'Contact for Price',
-        featured: false,
-        badge: '',
-        specs: {
-            screen: '', resolution: '', cpu: '', ram: '', storage: '',
-            os: '', connectivity: '', battery: '', weight: '', dimensions: '',
-            camera: '', stylus: '', extras: ''
-        },
-        colors: [],
-        image: ''
-    };
+  const p = product || {
+    id: '',
+    name: '',
+    series: 'Palma',
+    tagline: '',
+    description: '',
+    price: 'Contact for Price',
+    featured: false,
+    badge: '',
+    specs: {
+      screen: '', resolution: '', cpu: '', ram: '', storage: '',
+      os: '', connectivity: '', battery: '', weight: '', dimensions: '',
+      camera: '', stylus: '', extras: ''
+    },
+    colors: [],
+    image: '',
+    video: ''
+  };
 
-    return `
+  return `
     <section class="admin-form-page">
       <div class="admin-form-container">
         <div class="admin-form-header">
@@ -69,7 +72,7 @@ export function renderAdminProductForm() {
               </div>
               <div class="form-group">
                 <label for="p-tagline">Tagline *</label>
-                <input type="text" id="p-tagline" value="${p.tagline}" placeholder="e.g. 6.13&quot; Color Mobile ePaper with 5G" required />
+                <input type="text" id="p-tagline" value="${p.tagline}" placeholder='e.g. 6.13" Color Mobile ePaper with 5G' required />
               </div>
               <div class="form-group">
                 <label for="p-description">Description *</label>
@@ -81,21 +84,48 @@ export function renderAdminProductForm() {
                   <input type="text" id="p-price" value="${p.price}" placeholder="e.g. 550,000 MMK" />
                 </div>
                 <div class="form-group">
-                  <label for="p-image">Image Key</label>
-                  <input type="text" id="p-image" value="${p.image}" placeholder="e.g. palma2pro" />
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group">
                   <label for="p-colors">Colors (comma separated)</label>
                   <input type="text" id="p-colors" value="${(p.colors || []).join(', ')}" placeholder="Black, White" />
                 </div>
-                <div class="form-group form-checkbox">
-                  <label>
-                    <input type="checkbox" id="p-featured" ${p.featured ? 'checked' : ''} />
-                    Featured Product
-                  </label>
+              </div>
+              <div class="form-group form-checkbox">
+                <label>
+                  <input type="checkbox" id="p-featured" ${p.featured ? 'checked' : ''} />
+                  Featured Product
+                </label>
+              </div>
+            </div>
+
+            <!-- Media Upload -->
+            <div class="form-section">
+              <h3>🖼️ Product Media (Firebase Storage)</h3>
+
+              <!-- Image Upload -->
+              <div class="form-group">
+                <label>Product Image *</label>
+                <div class="media-upload-box" id="image-upload-box">
+                  ${p.image ? `<img src="${p.image}" alt="Current image" class="media-preview-img" id="image-preview-img">` : `<div class="media-upload-placeholder" id="image-placeholder"><span class="upload-icon">📷</span><span>Click or drag & drop an image</span><span class="upload-hint">PNG, JPG, WebP — recommended 800×1000px</span></div>`}
+                  <input type="file" id="p-image-file" accept="image/*" class="file-input-hidden" />
+                  <input type="hidden" id="p-image" value="${p.image || ''}" />
                 </div>
+                <div class="upload-progress-bar" id="image-progress-bar" style="display:none;">
+                  <div class="upload-progress-fill" id="image-progress-fill"></div>
+                </div>
+                <p class="upload-status" id="image-upload-status"></p>
+              </div>
+
+              <!-- Video Upload -->
+              <div class="form-group">
+                <label>Product Video (optional)</label>
+                <div class="media-upload-box" id="video-upload-box">
+                  ${p.video ? `<video src="${p.video}" controls class="media-preview-video" id="video-preview-el"></video>` : `<div class="media-upload-placeholder" id="video-placeholder"><span class="upload-icon">🎬</span><span>Click or drag & drop a video</span><span class="upload-hint">MP4, WebM — max 100MB recommended</span></div>`}
+                  <input type="file" id="p-video-file" accept="video/*" class="file-input-hidden" />
+                  <input type="hidden" id="p-video" value="${p.video || ''}" />
+                </div>
+                <div class="upload-progress-bar" id="video-progress-bar" style="display:none;">
+                  <div class="upload-progress-fill" id="video-progress-fill"></div>
+                </div>
+                <p class="upload-status" id="video-upload-status"></p>
               </div>
             </div>
 
@@ -104,7 +134,7 @@ export function renderAdminProductForm() {
               <h3>⚙️ Specifications</h3>
               <div class="form-group">
                 <label for="p-screen">Screen</label>
-                <input type="text" id="p-screen" value="${p.specs.screen || ''}" placeholder="e.g. 6.13&quot; Kaleido 3 glass screen" />
+                <input type="text" id="p-screen" value="${p.specs.screen || ''}" placeholder='e.g. 6.13" Kaleido 3 glass screen' />
               </div>
               <div class="form-group">
                 <label for="p-resolution">Resolution</label>
@@ -167,7 +197,7 @@ export function renderAdminProductForm() {
 
           <div class="form-actions">
             <a href="#admin" class="btn btn-secondary">Cancel</a>
-            <button type="submit" class="btn btn-primary">${isEdit ? 'Save Changes' : 'Add Product'}</button>
+            <button type="submit" class="btn btn-primary" id="save-product-btn">${isEdit ? 'Save Changes' : 'Add Product'}</button>
           </div>
         </form>
       </div>
@@ -175,49 +205,173 @@ export function renderAdminProductForm() {
   `;
 }
 
+function uploadFile(file, storagePath, progressBarId, progressFillId, statusId, previewContainerId, previewType) {
+  return new Promise((resolve, reject) => {
+    const storageRef = ref(storage, storagePath);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    const progressBar = document.getElementById(progressBarId);
+    const progressFill = document.getElementById(progressFillId);
+    const statusEl = document.getElementById(statusId);
+
+    progressBar.style.display = 'block';
+    statusEl.textContent = 'Uploading...';
+    statusEl.className = 'upload-status uploading';
+
+    uploadTask.on('state_changed',
+      (snapshot) => {
+        const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+        progressFill.style.width = pct + '%';
+        statusEl.textContent = `Uploading... ${pct}%`;
+      },
+      (error) => {
+        statusEl.textContent = '❌ Upload failed: ' + error.message;
+        statusEl.className = 'upload-status error';
+        progressBar.style.display = 'none';
+        reject(error);
+      },
+      async () => {
+        const url = await getDownloadURL(uploadTask.snapshot.ref);
+        progressBar.style.display = 'none';
+        statusEl.textContent = '✅ Uploaded successfully!';
+        statusEl.className = 'upload-status success';
+
+        // Update preview
+        const box = document.getElementById(previewContainerId);
+        if (previewType === 'image') {
+          box.innerHTML = `<img src="${url}" alt="Preview" class="media-preview-img" style="cursor:pointer;" title="Click to change">
+            <input type="file" id="p-image-file" accept="image/*" class="file-input-hidden" />
+            <input type="hidden" id="p-image" value="${url}" />`;
+          initImageUpload();
+        } else {
+          box.innerHTML = `<video src="${url}" controls class="media-preview-video" style="cursor:pointer;" title="Click to change"></video>
+            <input type="file" id="p-video-file" accept="video/*" class="file-input-hidden" />
+            <input type="hidden" id="p-video" value="${url}" />`;
+          initVideoUpload();
+        }
+
+        resolve(url);
+      }
+    );
+  });
+}
+
+function initImageUpload() {
+  const box = document.getElementById('image-upload-box');
+  const fileInput = document.getElementById('p-image-file');
+
+  if (!box || !fileInput) return;
+
+  box.addEventListener('click', () => fileInput.click());
+  box.addEventListener('dragover', (e) => { e.preventDefault(); box.classList.add('drag-over'); });
+  box.addEventListener('dragleave', () => box.classList.remove('drag-over'));
+  box.addEventListener('drop', (e) => {
+    e.preventDefault();
+    box.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) handleImageFile(file);
+  });
+
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) handleImageFile(file);
+  });
+}
+
+function initVideoUpload() {
+  const box = document.getElementById('video-upload-box');
+  const fileInput = document.getElementById('p-video-file');
+
+  if (!box || !fileInput) return;
+
+  box.addEventListener('click', () => fileInput.click());
+  box.addEventListener('dragover', (e) => { e.preventDefault(); box.classList.add('drag-over'); });
+  box.addEventListener('dragleave', () => box.classList.remove('drag-over'));
+  box.addEventListener('drop', (e) => {
+    e.preventDefault();
+    box.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('video/')) handleVideoFile(file);
+  });
+
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) handleVideoFile(file);
+  });
+}
+
+async function handleImageFile(file) {
+  const productName = document.getElementById('p-name').value || 'product';
+  const safeName = productName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const ext = file.name.split('.').pop();
+  const path = `products/${safeName}/image_${Date.now()}.${ext}`;
+  await uploadFile(file, path, 'image-progress-bar', 'image-progress-fill', 'image-upload-status', 'image-upload-box', 'image');
+}
+
+async function handleVideoFile(file) {
+  const productName = document.getElementById('p-name').value || 'product';
+  const safeName = productName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const ext = file.name.split('.').pop();
+  const path = `products/${safeName}/video_${Date.now()}.${ext}`;
+  await uploadFile(file, path, 'video-progress-bar', 'video-progress-fill', 'video-upload-status', 'video-upload-box', 'video');
+}
+
 export function initAdminProductForm() {
-    const form = document.getElementById('product-form');
-    const existingProduct = getEditProduct();
+  const form = document.getElementById('product-form');
 
-    form?.addEventListener('submit', (e) => {
-        e.preventDefault();
+  // Init upload zones
+  initImageUpload();
+  initVideoUpload();
 
-        const id = existingProduct
-            ? existingProduct.id
-            : document.getElementById('p-name').value.toLowerCase().replace(/[^a-z0-9]/g, '');
+  getEditProduct().then(existingProduct => {
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
 
-        const product = {
-            id,
-            name: document.getElementById('p-name').value,
-            series: document.getElementById('p-series').value,
-            tagline: document.getElementById('p-tagline').value,
-            description: document.getElementById('p-description').value,
-            price: document.getElementById('p-price').value || 'Contact for Price',
-            featured: document.getElementById('p-featured').checked,
-            badge: document.getElementById('p-badge').value || null,
-            specs: {
-                screen: document.getElementById('p-screen').value,
-                resolution: document.getElementById('p-resolution').value,
-                cpu: document.getElementById('p-cpu').value,
-                ram: document.getElementById('p-ram').value,
-                storage: document.getElementById('p-storage').value,
-                os: document.getElementById('p-os').value,
-                connectivity: document.getElementById('p-connectivity').value,
-                battery: document.getElementById('p-battery').value,
-                weight: document.getElementById('p-weight').value,
-                dimensions: document.getElementById('p-dimensions').value,
-                camera: document.getElementById('p-camera').value,
-                stylus: document.getElementById('p-stylus').value,
-                extras: document.getElementById('p-extras').value,
-            },
-            colors: document.getElementById('p-colors').value
-                .split(',')
-                .map((c) => c.trim())
-                .filter(Boolean),
-            image: document.getElementById('p-image').value || id,
-        };
+      const saveBtn = document.getElementById('save-product-btn');
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving...';
 
-        saveProduct(product);
-        window.location.hash = '#admin';
+      const id = existingProduct
+        ? existingProduct.id
+        : document.getElementById('p-name').value.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+      const imageUrl = document.getElementById('p-image')?.value || '';
+      const videoUrl = document.getElementById('p-video')?.value || '';
+
+      const product = {
+        id,
+        name: document.getElementById('p-name').value,
+        series: document.getElementById('p-series').value,
+        tagline: document.getElementById('p-tagline').value,
+        description: document.getElementById('p-description').value,
+        price: document.getElementById('p-price').value || 'Contact for Price',
+        featured: document.getElementById('p-featured').checked,
+        badge: document.getElementById('p-badge').value || null,
+        specs: {
+          screen: document.getElementById('p-screen').value,
+          resolution: document.getElementById('p-resolution').value,
+          cpu: document.getElementById('p-cpu').value,
+          ram: document.getElementById('p-ram').value,
+          storage: document.getElementById('p-storage').value,
+          os: document.getElementById('p-os').value,
+          connectivity: document.getElementById('p-connectivity').value,
+          battery: document.getElementById('p-battery').value,
+          weight: document.getElementById('p-weight').value,
+          dimensions: document.getElementById('p-dimensions').value,
+          camera: document.getElementById('p-camera').value,
+          stylus: document.getElementById('p-stylus').value,
+          extras: document.getElementById('p-extras').value,
+        },
+        colors: document.getElementById('p-colors').value
+          .split(',')
+          .map((c) => c.trim())
+          .filter(Boolean),
+        image: imageUrl,
+        video: videoUrl || null,
+      };
+
+      await saveProduct(product);
+      window.location.hash = '#admin';
     });
+  });
 }

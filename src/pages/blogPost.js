@@ -1,16 +1,16 @@
 import { t, getLang } from '../i18n.js';
 import { getPosts } from '../data/store.js';
 
-function getPostFromHash() {
+async function getPostFromHash() {
   const hash = window.location.hash;
   const match = hash.match(/id=([^&]+)/);
   if (!match) return null;
-  const posts = getPosts();
+  const posts = await getPosts();
   return posts.find((p) => p.id === match[1]) || null;
 }
 
-export function renderBlogPost() {
-  const post = getPostFromHash();
+export async function renderBlogPost() {
+  const post = await getPostFromHash();
   const lang = getLang();
 
   if (!post) {

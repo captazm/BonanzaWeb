@@ -23,7 +23,8 @@ export const products = [
             extras: 'Fingerprint, Volume/Page-Turn Buttons, Dual Mics, Speaker, USB-C (OTG)'
         },
         colors: ['Black'],
-        image: 'palma2pro'
+        image: '/images/products/palma2pro.png',
+        video: '/images/products/palma2pro.mp4'
     },
     {
         id: 'palma2',
@@ -49,7 +50,8 @@ export const products = [
             extras: 'Fingerprint, Volume/Page-Turn Buttons, Dual Mics, Speaker, microSD, USB-C (OTG)'
         },
         colors: ['Black', 'White'],
-        image: 'palma2'
+        image: '/images/products/palma2.png',
+        video: '/images/products/palma2.mp4'
     },
     {
         id: 'noteair5c',
@@ -75,7 +77,8 @@ export const products = [
             extras: 'Fingerprint, Dual Speakers, Mic, microSD, USB-C (OTG)'
         },
         colors: ['Grey'],
-        image: 'noteair5c'
+        image: '/images/products/noteair5c.jpg',
+        video: '/images/products/noteair5c.mp4'
     },
     {
         id: 'notemax',
@@ -101,7 +104,8 @@ export const products = [
             extras: 'Dual Speakers, Mic, USB-C (OTG)'
         },
         colors: ['Black'],
-        image: 'notemax'
+        image: '/images/products/notemax.png',
+        video: '/images/products/notemax.mp4'
     },
     {
         id: 'tabxc',
@@ -127,7 +131,8 @@ export const products = [
             extras: 'Dual Speakers, Mic, USB-C (OTG), Front Light (Warm/Cold)'
         },
         colors: ['Black'],
-        image: 'tabxc'
+        image: '/images/products/tabxc.jpg',
+        video: '/images/products/tabxc.mp4'
     },
     {
         id: 'gocolor7gen2',
@@ -153,7 +158,8 @@ export const products = [
             extras: 'Page-Turn Buttons, Speaker, Mic, microSD, USB-C (OTG)'
         },
         colors: ['Black'],
-        image: 'gocolor7'
+        image: '/images/products/gocolor7gen2.jpg',
+        video: '/images/products/gocolor7gen2.mp4'
     },
     {
         id: 'go7',
@@ -179,7 +185,8 @@ export const products = [
             extras: 'Page-Turn Buttons, Speaker, Mic, microSD, USB-C (OTG)'
         },
         colors: ['Black', 'White'],
-        image: 'go7'
+        image: '/images/products/go7.jpg',
+        video: '/images/products/go7.mp4'
     },
     {
         id: 'page',
@@ -204,7 +211,8 @@ export const products = [
             extras: 'Page-Turn Buttons, Speaker, Mic, microSD, USB-C (OTG)'
         },
         colors: ['Black'],
-        image: 'page'
+        image: '/images/products/page.jpg',
+        video: '/images/products/page.mp4'
     }
 ];
 
