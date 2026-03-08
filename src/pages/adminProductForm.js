@@ -11,29 +11,215 @@ async function getEditProduct() {
   return products.find((p) => p.id === match[1]) || null;
 }
 
+// -------------------------------------------------------
+// State: uploaded image URLs
+// -------------------------------------------------------
+const uploadedImages = [];
+
+function getSafeName() {
+  return (document.getElementById('p-name')?.value || 'product')
+    .toLowerCase().replace(/[^a-z0-9]/g, '_');
+}
+
+// -------------------------------------------------------
+// Single file upload helper → Promise<url>
+// -------------------------------------------------------
+function uploadToStorage(file, path) {
+  return new Promise((resolve, reject) => {
+    const storageRef = ref(storage, path);
+    const task = uploadBytesResumable(storageRef, file);
+    task.on('state_changed', null,
+      (err) => reject(err),
+      async () => resolve(await getDownloadURL(task.snapshot.ref))
+    );
+  });
+}
+
+// -------------------------------------------------------
+// Render the image grid inside the upload zone
+// -------------------------------------------------------
+function renderImageGrid() {
+  const grid = document.getElementById('images-grid');
+  if (!grid) return;
+
+  grid.innerHTML = uploadedImages.map((url, i) => `
+    <div class="img-thumb-item" data-index="${i}">
+      <img src="${url}" alt="Image ${i + 1}">
+      <button type="button" class="img-thumb-remove" data-index="${i}" title="Remove">✕</button>
+      ${i === 0 ? '<span class="img-thumb-cover">Cover</span>' : ''}
+    </div>
+  `).join('');
+
+  // Remove handlers
+  grid.querySelectorAll('.img-thumb-remove').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.index);
+      uploadedImages.splice(idx, 1);
+      renderImageGrid();
+    });
+  });
+
+  // Update counter
+  const counter = document.getElementById('images-count');
+  if (counter) counter.textContent = `${uploadedImages.length} image${uploadedImages.length !== 1 ? 's' : ''}`;
+}
+
+// -------------------------------------------------------
+// Handle dropped / selected image files
+// -------------------------------------------------------
+async function handleImageFiles(files) {
+  const statusEl = document.getElementById('images-upload-status');
+  const bar = document.getElementById('images-progress-bar');
+  const fill = document.getElementById('images-progress-fill');
+
+  const validFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+  if (!validFiles.length) return;
+
+  bar.style.display = 'block';
+  statusEl.textContent = `Uploading ${validFiles.length} image(s)...`;
+  statusEl.className = 'upload-status uploading';
+
+  let done = 0;
+  for (const file of validFiles) {
+    const ext = file.name.split('.').pop();
+    const path = `products/${getSafeName()}/img_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    try {
+      const url = await uploadToStorage(file, path);
+      uploadedImages.push(url);
+      done++;
+      fill.style.width = `${Math.round((done / validFiles.length) * 100)}%`;
+      renderImageGrid();
+    } catch (err) {
+      console.error('Upload error:', err);
+    }
+  }
+
+  bar.style.display = 'none';
+  fill.style.width = '0%';
+  statusEl.textContent = `✅ ${done} image(s) uploaded!`;
+  statusEl.className = 'upload-status success';
+}
+
+// -------------------------------------------------------
+// Handle video file
+// -------------------------------------------------------
+async function handleVideoFile(file) {
+  const statusEl = document.getElementById('video-upload-status');
+  const bar = document.getElementById('video-progress-bar');
+  const fill = document.getElementById('video-progress-fill');
+  const hiddenInput = document.getElementById('p-video');
+  const box = document.getElementById('video-upload-box');
+
+  bar.style.display = 'block';
+  statusEl.textContent = 'Uploading video...';
+  statusEl.className = 'upload-status uploading';
+
+  const ext = file.name.split('.').pop();
+  const path = `products/${getSafeName()}/video_${Date.now()}.${ext}`;
+
+  const storageRef = ref(storage, path);
+  const task = uploadBytesResumable(storageRef, file);
+
+  task.on('state_changed',
+    (snap) => {
+      const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+      fill.style.width = pct + '%';
+      statusEl.textContent = `Uploading... ${pct}%`;
+    },
+    (err) => {
+      statusEl.textContent = '❌ Upload failed: ' + err.message;
+      statusEl.className = 'upload-status error';
+      bar.style.display = 'none';
+    },
+    async () => {
+      const url = await getDownloadURL(task.snapshot.ref);
+      hiddenInput.value = url;
+      bar.style.display = 'none';
+      statusEl.textContent = '✅ Video uploaded!';
+      statusEl.className = 'upload-status success';
+      // Show preview
+      box.querySelector('.media-upload-placeholder')?.remove();
+      if (!box.querySelector('video')) {
+        const vid = document.createElement('video');
+        vid.src = url;
+        vid.controls = true;
+        vid.className = 'media-preview-video';
+        box.prepend(vid);
+      }
+    }
+  );
+}
+
+// -------------------------------------------------------
+// Init upload zones
+// -------------------------------------------------------
+function initImageUploadZone() {
+  const zone = document.getElementById('images-drop-zone');
+  const fileInput = document.getElementById('p-images-file');
+  if (!zone || !fileInput) return;
+
+  zone.addEventListener('click', () => fileInput.click());
+  zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', (e) => {
+    e.preventDefault(); zone.classList.remove('drag-over');
+    handleImageFiles(e.dataTransfer.files);
+  });
+  fileInput.addEventListener('change', (e) => handleImageFiles(e.target.files));
+}
+
+function initVideoUploadZone() {
+  const box = document.getElementById('video-upload-box');
+  const fileInput = document.getElementById('p-video-file');
+  if (!box || !fileInput) return;
+
+  box.addEventListener('click', () => fileInput.click());
+  box.addEventListener('dragover', (e) => { e.preventDefault(); box.classList.add('drag-over'); });
+  box.addEventListener('dragleave', () => box.classList.remove('drag-over'));
+  box.addEventListener('drop', (e) => {
+    e.preventDefault(); box.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file?.type.startsWith('video/')) handleVideoFile(file);
+  });
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) handleVideoFile(file);
+  });
+}
+
+// -------------------------------------------------------
+// Render
+// -------------------------------------------------------
 export async function renderAdminProductForm() {
   const product = await getEditProduct();
   const isEdit = !!product;
   const seriesOptions = Object.keys(seriesInfo);
 
+  // Reset state
+  uploadedImages.length = 0;
+
   const p = product || {
-    id: '',
-    name: '',
-    series: 'Palma',
-    tagline: '',
-    description: '',
-    price: 'Contact for Price',
-    featured: false,
-    badge: '',
+    id: '', name: '', series: 'Palma', tagline: '', description: '',
+    price: 'Contact for Price', featured: false, badge: '',
     specs: {
-      screen: '', resolution: '', cpu: '', ram: '', storage: '',
-      os: '', connectivity: '', battery: '', weight: '', dimensions: '',
-      camera: '', stylus: '', extras: ''
+      screen: '', resolution: '', cpu: '', ram: '', storage: '', os: '',
+      connectivity: '', battery: '', weight: '', dimensions: '', camera: '', stylus: '', extras: ''
     },
-    colors: [],
-    image: '',
-    video: ''
+    colors: [], images: [], image: '', video: ''
   };
+
+  // Pre-populate images from existing product
+  const existingImages = p.images?.length ? p.images : (p.image ? [p.image] : []);
+  existingImages.forEach(url => uploadedImages.push(url));
+
+  const existingThumbs = existingImages.map((url, i) => `
+    <div class="img-thumb-item" data-index="${i}">
+      <img src="${url}" alt="Image ${i + 1}">
+      <button type="button" class="img-thumb-remove" data-index="${i}" title="Remove">✕</button>
+      ${i === 0 ? '<span class="img-thumb-cover">Cover</span>' : ''}
+    </div>
+  `).join('');
 
   return `
     <section class="admin-form-page">
@@ -97,28 +283,51 @@ export async function renderAdminProductForm() {
             </div>
 
             <!-- Media Upload -->
-            <div class="form-section">
-              <h3>🖼️ Product Media (Firebase Storage)</h3>
+            <div class="form-section form-section-full">
+              <h3>🖼️ Product Gallery (Firebase Storage)</h3>
 
-              <!-- Image Upload -->
+              <!-- Multi-image upload -->
               <div class="form-group">
-                <label>Product Image *</label>
-                <div class="media-upload-box" id="image-upload-box">
-                  ${p.image ? `<img src="${p.image}" alt="Current image" class="media-preview-img" id="image-preview-img">` : `<div class="media-upload-placeholder" id="image-placeholder"><span class="upload-icon">📷</span><span>Click or drag & drop an image</span><span class="upload-hint">PNG, JPG, WebP — recommended 800×1000px</span></div>`}
-                  <input type="file" id="p-image-file" accept="image/*" class="file-input-hidden" />
-                  <input type="hidden" id="p-image" value="${p.image || ''}" />
+                <label>
+                  Product Images *
+                  <span class="label-hint">First image is the cover shown on product cards</span>
+                </label>
+
+                <!-- Drop zone -->
+                <div class="media-upload-box images-drop-zone" id="images-drop-zone">
+                  <div class="media-upload-placeholder">
+                    <span class="upload-icon">📷</span>
+                    <span>Click or drag &amp; drop to add images</span>
+                    <span class="upload-hint">PNG, JPG, WebP — you can add multiple at once</span>
+                  </div>
+                  <input type="file" id="p-images-file" accept="image/*" multiple class="file-input-hidden" />
                 </div>
-                <div class="upload-progress-bar" id="image-progress-bar" style="display:none;">
-                  <div class="upload-progress-fill" id="image-progress-fill"></div>
+
+                <!-- Uploaded image grid -->
+                <div class="images-grid" id="images-grid">
+                  ${existingThumbs}
                 </div>
-                <p class="upload-status" id="image-upload-status"></p>
+
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-top: var(--space-sm);">
+                  <span class="upload-status" id="images-count">${existingImages.length} image${existingImages.length !== 1 ? 's' : ''}</span>
+                  <span class="upload-status" id="images-upload-status"></span>
+                </div>
+                <div class="upload-progress-bar" id="images-progress-bar" style="display:none;">
+                  <div class="upload-progress-fill" id="images-progress-fill"></div>
+                </div>
               </div>
 
-              <!-- Video Upload -->
+              <!-- Video upload -->
               <div class="form-group">
                 <label>Product Video (optional)</label>
                 <div class="media-upload-box" id="video-upload-box">
-                  ${p.video ? `<video src="${p.video}" controls class="media-preview-video" id="video-preview-el"></video>` : `<div class="media-upload-placeholder" id="video-placeholder"><span class="upload-icon">🎬</span><span>Click or drag & drop a video</span><span class="upload-hint">MP4, WebM — max 100MB recommended</span></div>`}
+                  ${p.video ? `<video src="${p.video}" controls class="media-preview-video"></video>` : `
+                    <div class="media-upload-placeholder">
+                      <span class="upload-icon">🎬</span>
+                      <span>Click or drag &amp; drop a video</span>
+                      <span class="upload-hint">MP4, WebM — max 100MB recommended</span>
+                    </div>
+                  `}
                   <input type="file" id="p-video-file" accept="video/*" class="file-input-hidden" />
                   <input type="hidden" id="p-video" value="${p.video || ''}" />
                 </div>
@@ -130,15 +339,17 @@ export async function renderAdminProductForm() {
             </div>
 
             <!-- Specs -->
-            <div class="form-section">
+            <div class="form-section form-section-full">
               <h3>⚙️ Specifications</h3>
-              <div class="form-group">
-                <label for="p-screen">Screen</label>
-                <input type="text" id="p-screen" value="${p.specs.screen || ''}" placeholder='e.g. 6.13" Kaleido 3 glass screen' />
-              </div>
-              <div class="form-group">
-                <label for="p-resolution">Resolution</label>
-                <input type="text" id="p-resolution" value="${p.specs.resolution || ''}" placeholder="e.g. 824×1648 (300ppi)" />
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="p-screen">Screen</label>
+                  <input type="text" id="p-screen" value="${p.specs.screen || ''}" placeholder='e.g. 6.13" Kaleido 3 glass screen' />
+                </div>
+                <div class="form-group">
+                  <label for="p-resolution">Resolution</label>
+                  <input type="text" id="p-resolution" value="${p.specs.resolution || ''}" placeholder="e.g. 824×1648 (300ppi)" />
+                </div>
               </div>
               <div class="form-row">
                 <div class="form-group">
@@ -205,123 +416,12 @@ export async function renderAdminProductForm() {
   `;
 }
 
-function uploadFile(file, storagePath, progressBarId, progressFillId, statusId, previewContainerId, previewType) {
-  return new Promise((resolve, reject) => {
-    const storageRef = ref(storage, storagePath);
-    const uploadTask = uploadBytesResumable(storageRef, file);
-
-    const progressBar = document.getElementById(progressBarId);
-    const progressFill = document.getElementById(progressFillId);
-    const statusEl = document.getElementById(statusId);
-
-    progressBar.style.display = 'block';
-    statusEl.textContent = 'Uploading...';
-    statusEl.className = 'upload-status uploading';
-
-    uploadTask.on('state_changed',
-      (snapshot) => {
-        const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-        progressFill.style.width = pct + '%';
-        statusEl.textContent = `Uploading... ${pct}%`;
-      },
-      (error) => {
-        statusEl.textContent = '❌ Upload failed: ' + error.message;
-        statusEl.className = 'upload-status error';
-        progressBar.style.display = 'none';
-        reject(error);
-      },
-      async () => {
-        const url = await getDownloadURL(uploadTask.snapshot.ref);
-        progressBar.style.display = 'none';
-        statusEl.textContent = '✅ Uploaded successfully!';
-        statusEl.className = 'upload-status success';
-
-        // Update preview
-        const box = document.getElementById(previewContainerId);
-        if (previewType === 'image') {
-          box.innerHTML = `<img src="${url}" alt="Preview" class="media-preview-img" style="cursor:pointer;" title="Click to change">
-            <input type="file" id="p-image-file" accept="image/*" class="file-input-hidden" />
-            <input type="hidden" id="p-image" value="${url}" />`;
-          initImageUpload();
-        } else {
-          box.innerHTML = `<video src="${url}" controls class="media-preview-video" style="cursor:pointer;" title="Click to change"></video>
-            <input type="file" id="p-video-file" accept="video/*" class="file-input-hidden" />
-            <input type="hidden" id="p-video" value="${url}" />`;
-          initVideoUpload();
-        }
-
-        resolve(url);
-      }
-    );
-  });
-}
-
-function initImageUpload() {
-  const box = document.getElementById('image-upload-box');
-  const fileInput = document.getElementById('p-image-file');
-
-  if (!box || !fileInput) return;
-
-  box.addEventListener('click', () => fileInput.click());
-  box.addEventListener('dragover', (e) => { e.preventDefault(); box.classList.add('drag-over'); });
-  box.addEventListener('dragleave', () => box.classList.remove('drag-over'));
-  box.addEventListener('drop', (e) => {
-    e.preventDefault();
-    box.classList.remove('drag-over');
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) handleImageFile(file);
-  });
-
-  fileInput.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (file) handleImageFile(file);
-  });
-}
-
-function initVideoUpload() {
-  const box = document.getElementById('video-upload-box');
-  const fileInput = document.getElementById('p-video-file');
-
-  if (!box || !fileInput) return;
-
-  box.addEventListener('click', () => fileInput.click());
-  box.addEventListener('dragover', (e) => { e.preventDefault(); box.classList.add('drag-over'); });
-  box.addEventListener('dragleave', () => box.classList.remove('drag-over'));
-  box.addEventListener('drop', (e) => {
-    e.preventDefault();
-    box.classList.remove('drag-over');
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('video/')) handleVideoFile(file);
-  });
-
-  fileInput.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (file) handleVideoFile(file);
-  });
-}
-
-async function handleImageFile(file) {
-  const productName = document.getElementById('p-name').value || 'product';
-  const safeName = productName.toLowerCase().replace(/[^a-z0-9]/g, '_');
-  const ext = file.name.split('.').pop();
-  const path = `products/${safeName}/image_${Date.now()}.${ext}`;
-  await uploadFile(file, path, 'image-progress-bar', 'image-progress-fill', 'image-upload-status', 'image-upload-box', 'image');
-}
-
-async function handleVideoFile(file) {
-  const productName = document.getElementById('p-name').value || 'product';
-  const safeName = productName.toLowerCase().replace(/[^a-z0-9]/g, '_');
-  const ext = file.name.split('.').pop();
-  const path = `products/${safeName}/video_${Date.now()}.${ext}`;
-  await uploadFile(file, path, 'video-progress-bar', 'video-progress-fill', 'video-upload-status', 'video-upload-box', 'video');
-}
-
 export function initAdminProductForm() {
   const form = document.getElementById('product-form');
 
-  // Init upload zones
-  initImageUpload();
-  initVideoUpload();
+  initImageUploadZone();
+  initVideoUploadZone();
+  renderImageGrid();
 
   getEditProduct().then(existingProduct => {
     form?.addEventListener('submit', async (e) => {
@@ -335,7 +435,6 @@ export function initAdminProductForm() {
         ? existingProduct.id
         : document.getElementById('p-name').value.toLowerCase().replace(/[^a-z0-9]/g, '');
 
-      const imageUrl = document.getElementById('p-image')?.value || '';
       const videoUrl = document.getElementById('p-video')?.value || '';
 
       const product = {
@@ -363,10 +462,9 @@ export function initAdminProductForm() {
           extras: document.getElementById('p-extras').value,
         },
         colors: document.getElementById('p-colors').value
-          .split(',')
-          .map((c) => c.trim())
-          .filter(Boolean),
-        image: imageUrl,
+          .split(',').map(c => c.trim()).filter(Boolean),
+        images: [...uploadedImages],
+        image: uploadedImages[0] || '',   // keep for backwards compat
         video: videoUrl || null,
       };
 
