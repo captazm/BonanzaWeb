@@ -3,12 +3,12 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-    appId: import.meta.env.VITE_FIREBASE_APP_ID
+    apiKey: "AIzaSyBVO_Jm2yHBk1zuZttHRfAHJF6N6At3JjU",
+    authDomain: "bonanza-website-95e08.firebaseapp.com",
+    projectId: "bonanza-website-95e08",
+    storageBucket: "bonanza-website-95e08.firebasestorage.app",
+    messagingSenderId: "691069923017",
+    appId: "1:691069923017:web:407090415920be68476718"
 };
 
 const app = initializeApp(firebaseConfig);
