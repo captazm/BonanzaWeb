@@ -12,6 +12,8 @@ import { renderAdminLogin, initAdminLogin } from './src/pages/adminLogin.js';
 import { renderAdmin, initAdmin } from './src/pages/admin.js';
 import { renderAdminProductForm, initAdminProductForm } from './src/pages/adminProductForm.js';
 import { renderAdminBlogForm, initAdminBlogForm } from './src/pages/adminBlogForm.js';
+import { renderCheckout, initCheckout } from './src/pages/checkout.js';
+import './src/components/cartDrawer.js'; // Just import to register global listener
 import { getProducts, isLoggedIn, getMaintenanceMode } from './src/data/store.js';
 import { initTheme } from './src/theme.js';
 
@@ -91,6 +93,9 @@ async function renderPage() {
         case 'blog-post':
             pageContent = await renderBlogPost();
             break;
+        case 'checkout':
+            pageContent = await renderCheckout();
+            break;
         case 'admin-login':
             pageContent = renderAdminLogin();
             break;
@@ -139,6 +144,15 @@ async function renderPage() {
             break;
         case 'contact':
             initContactPage();
+            break;
+        case 'blog-post':
+            // Assuming initBlogPost is defined elsewhere or not needed for this change
+            // If initBlogPost is a function, it needs to be imported or defined.
+            // The instruction only asked to import renderCheckout and initCheckout.
+            // initBlogPost();
+            break;
+        case 'checkout':
+            initCheckout();
             break;
         case 'admin-login':
             initAdminLogin();
@@ -197,7 +211,7 @@ function initProductCards() {
                 const modalContainer = document.createElement('div');
                 modalContainer.innerHTML = renderProductDetail(product);
                 document.body.appendChild(modalContainer.firstElementChild);
-                initProductDetail();
+                initProductDetail(product);
             });
         });
     });

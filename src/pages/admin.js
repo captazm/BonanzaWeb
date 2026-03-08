@@ -1,4 +1,4 @@
-import { getProducts, deleteProduct, getPosts, deletePost, getMessages, deleteMessage, markMessageAsRead, subscribeToMessages, logout, getMaintenanceMode, setMaintenanceMode } from '../data/store.js';
+import { getProducts, deleteProduct, getPosts, deletePost, getMessages, deleteMessage, markMessageAsRead, subscribeToMessages, logout, getMaintenanceMode, setMaintenanceMode, getOrders, recordSale } from '../data/store.js';
 
 export async function renderAdmin() {
   const products = await getProducts();
@@ -22,6 +22,9 @@ export async function renderAdmin() {
             <button class="admin-nav-btn" data-tab="messages">
               <span>💬</span> Messages
               <span id="msg-badge" class="badge-count" style="display:none">0</span>
+            </button>
+            <button class="admin-nav-btn" data-tab="sales">
+              <span>💰</span> Sales
             </button>
             <button class="admin-nav-btn" data-tab="settings">
               <span>⚙️</span> Settings
@@ -56,6 +59,13 @@ export async function renderAdmin() {
                 <span class="admin-stat-label">Inquiries</span>
               </div>
             </div>
+            <div class="admin-stat-card glass-card">
+              <div class="admin-stat-icon">💰</div>
+              <div class="admin-stat-info">
+                <span class="admin-stat-value" id="total-sales-count">...</span>
+                <span class="admin-stat-label">Sales</span>
+              </div>
+            </div>
           </div>
 
 
@@ -72,6 +82,7 @@ export async function renderAdmin() {
                     <th>Product</th>
                     <th>Series</th>
                     <th>Price</th>
+                    <th>Stock</th>
                     <th>Badge</th>
                     <th>Featured</th>
                     <th>Actions</th>
@@ -88,6 +99,11 @@ export async function renderAdmin() {
                       </td>
                       <td><span class="badge badge-new">${p.series}</span></td>
                       <td>${p.price}</td>
+                      <td>
+                        <span class="stock-badge ${p.stock <= 2 ? 'low-stock' : ''}">
+                          ${p.stock || 0}
+                        </span>
+                      </td>
                       <td>${p.badge ? `<span class="badge badge-${(p.badge || '').toLowerCase()}">${p.badge}</span>` : '—'}</td>
                       <td>${p.featured ? '⭐' : '—'}</td>
                       <td>
@@ -154,6 +170,32 @@ export async function renderAdmin() {
             </div>
             <div class="admin-messages-list" id="messages-container">
               <p class="admin-empty">Loading messages...</p>
+            </div>
+          </div>
+
+          <!-- Sales Tab -->
+          <div class="admin-tab" id="tab-sales">
+            <div class="admin-tab-header">
+              <h2>Sales & Orders</h2>
+              <button class="btn btn-primary" id="record-sale-btn">+ Record Sale</button>
+            </div>
+            <div class="admin-table-wrap glass-card">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Product</th>
+                    <th>Qty</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                    <th>Customer</th>
+                  </tr>
+                </thead>
+                <tbody id="sales-table-body">
+                  <!-- Loaded via JS -->
+                </tbody>
+              </table>
+              <div id="sales-empty-msg" class="admin-empty">No sales recorded yet.</div>
             </div>
           </div>
 
@@ -325,6 +367,141 @@ export function initAdmin() {
     });
   }
 
+  // Load Sales Data
+  const loadSales = async () => {
+    const orders = await getOrders();
+    const tableBody = document.getElementById('sales-table-body');
+    const emptyMsg = document.getElementById('sales-empty-msg');
+    const salesCountEl = document.getElementById('total-sales-count');
+
+    if (salesCountEl) salesCountEl.textContent = orders.length;
+
+    if (tableBody) {
+      if (orders.length === 0) {
+        tableBody.innerHTML = '';
+        if (emptyMsg) emptyMsg.style.display = 'block';
+      } else {
+        if (emptyMsg) emptyMsg.style.display = 'none';
+        tableBody.innerHTML = orders.map(o => {
+          const isWebsite = o.type === 'website';
+          const itemsDisplay = isWebsite
+            ? o.items.map(i => `${i.name} (x${i.quantity})`).join('<br>')
+            : o.productName;
+
+          const qtyDisplay = isWebsite ? o.items.reduce((sum, i) => sum + i.quantity, 0) : o.quantity;
+          const priceDisplay = isWebsite ? '—' : o.price.toLocaleString();
+
+          return `
+            <tr>
+              <td>${new Date(o.createdAt).toLocaleDateString()}</td>
+              <td>
+                <div class="admin-product-name">
+                  <strong>${isWebsite ? o.items.map(i => i.name).join(', ') : itemsDisplay}</strong>
+                  ${isWebsite ? `<small>${o.items.length} unique items</small>` : ''}
+                </div>
+              </td>
+              <td style="text-align:center">${qtyDisplay}</td>
+              <td>${priceDisplay}</td>
+              <td><strong>${(o.total || (o.price * o.quantity)).toLocaleString()}</strong></td>
+              <td>
+                <div class="admin-actions" style="justify-content: space-between; align-items: center; gap: 8px;">
+                  <span>${o.customerName}</span>
+                  ${isWebsite ? `<button class="admin-action-btn" data-view-order="${o.id}" title="Order Details">📄</button>` : ''}
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        // Attach listeners for "View Order"
+        tableBody.querySelectorAll('[data-view-order]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const order = orders.find(ord => ord.id === btn.dataset.viewOrder);
+            if (order) showOrderDetailsModal(order);
+          });
+        });
+      }
+    }
+  };
+
+  loadSales();
+
+  // Record Sale Modal
+  document.getElementById('record-sale-btn')?.addEventListener('click', async () => {
+    const products = await getProducts();
+    const productOptions = products.map(p => `<option value="${p.id}" data-price="${parseFloat((p.price || '0').replace(/[^0-9.]/g, '')) || 0}">${p.name} (Stock: ${p.stock || 0})</option>`).join('');
+
+    const modalHtml = `
+      <div class="admin-modal-overlay" id="sale-modal">
+        <div class="admin-modal glass-card">
+          <h3>Record New Sale</h3>
+          <form id="sale-form">
+            <div class="form-group">
+              <label>Product</label>
+              <select id="s-product" required>
+                <option value="">Select Product...</option>
+                ${productOptions}
+              </select>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Quantity</label>
+                <input type="number" id="s-qty" value="1" min="1" required />
+              </div>
+              <div class="form-group">
+                <label>Price (per unit)</label>
+                <input type="number" id="s-price" required />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Customer Name</label>
+              <input type="text" id="s-customer" placeholder="Optional" />
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn btn-secondary" id="close-sale-modal">Cancel</button>
+              <button type="submit" class="btn btn-primary">Record Sale</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    const modal = document.getElementById('sale-modal');
+    const form = document.getElementById('sale-form');
+    const productSelect = document.getElementById('s-product');
+    const priceInput = document.getElementById('s-price');
+
+    productSelect.addEventListener('change', () => {
+      const selected = productSelect.options[productSelect.selectedIndex];
+      if (selected.dataset.price) {
+        priceInput.value = selected.dataset.price;
+      }
+    });
+
+    document.getElementById('close-sale-modal').addEventListener('click', () => modal.remove());
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const pId = productSelect.value;
+      const qty = parseInt(document.getElementById('s-qty').value);
+      const price = parseFloat(priceInput.value);
+      const customer = document.getElementById('s-customer').value;
+
+      const success = await recordSale(pId, qty, customer, price);
+      if (success) {
+        showAdminNotification('✅ Sale recorded and stock updated');
+        modal.remove();
+        // Refresh products list and sales list
+        window.location.hash = '#admin';
+        window.dispatchEvent(new HashChangeEvent('hashchange'));
+      } else {
+        alert('Failed to record sale. Please check stock levels.');
+      }
+    });
+  });
+
   // Track unsubscribe for cleanup when page changes
   window.adminUnsubscribe = unsubscribe;
 }
@@ -345,4 +522,68 @@ function showAdminNotification(text) {
     toast.classList.add('animate-out');
     setTimeout(() => toast.remove(), 500);
   }, 5000);
+}
+
+function showOrderDetailsModal(order) {
+  const status = order.status || 'completed';
+  const modalHtml = `
+      <div class="admin-modal-overlay" id="order-details-modal">
+        <div class="admin-modal glass-card" style="max-width: 600px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: var(--space-xl);">
+            <h3>Order Details</h3>
+            <span class="badge badge-new">${status.toUpperCase()}</span>
+          </div>
+          
+          <div class="checkout-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap: var(--space-xl); margin-bottom: var(--space-xl);">
+            <div>
+                <label>Customer Info</label>
+                <p><strong>${order.customerName}</strong></p>
+                <p>${order.phone}</p>
+                <p>${order.email || 'No email'}</p>
+            </div>
+            <div>
+                <label>Delivery Details</label>
+                <p>${order.deliveryMethod === 'express' ? '🚀 Express' : '📦 Standard'}</p>
+                <p style="font-size: 0.85rem;">${order.address}</p>
+            </div>
+          </div>
+
+          <label>Ordered Items</label>
+          <div class="admin-table-wrap" style="margin-bottom: var(--space-xl);">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${order.items.map(i => `
+                        <tr>
+                            <td>${i.name}</td>
+                            <td>${i.quantity}</td>
+                            <td>${i.price.toLocaleString()}</td>
+                            <td>${(i.price * i.quantity).toLocaleString()}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top: 1px solid var(--border-medium); padding-top: var(--space-lg);">
+            <div style="font-size: 1.25rem; font-weight: 800;">
+                Total: <span style="color: var(--accent-primary)">${order.total.toLocaleString()} MMK</span>
+            </div>
+            <button class="btn btn-secondary" id="close-order-modal">Close</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+  document.getElementById('close-order-modal').addEventListener('click', () => {
+    document.getElementById('order-details-modal').remove();
+  });
 }

@@ -13,6 +13,7 @@ export function getLang() {
 export function setLang(lang) {
     try {
         localStorage.setItem(STORAGE_KEY, lang);
+        document.documentElement.setAttribute('lang', lang);
     } catch {
         // silently fail in SSR or restricted environments
     }

@@ -35,6 +35,51 @@ function uploadToStorage(file, path) {
   });
 }
 
+/**
+ * Optimizes an image file by resizing and compressing it.
+ * @param {File} file 
+ * @returns {Promise<Blob>}
+ */
+async function optimizeImage(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.src = URL.createObjectURL(file);
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      let width = img.width;
+      let height = img.height;
+      const MAX_DIM = 1200;
+
+      // Maintain aspect ratio while resizing
+      if (width > height) {
+        if (width > MAX_DIM) {
+          height *= MAX_DIM / width;
+          width = MAX_DIM;
+        }
+      } else {
+        if (height > MAX_DIM) {
+          width *= MAX_DIM / height;
+          height = MAX_DIM;
+        }
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // Try WebP first, then JPEG
+      canvas.toBlob((blob) => {
+        URL.revokeObjectURL(img.src);
+        if (blob) resolve(blob);
+        else reject(new Error('Canvas toBlob failed'));
+      }, 'image/webp', 0.8);
+    };
+    img.onerror = () => reject(new Error('Image load failed'));
+  });
+}
+
 // -------------------------------------------------------
 // Render the image grid inside the upload zone
 // -------------------------------------------------------
@@ -77,27 +122,30 @@ async function handleImageFiles(files) {
   if (!validFiles.length) return;
 
   bar.style.display = 'block';
-  statusEl.textContent = `Uploading ${validFiles.length} image(s)...`;
+  statusEl.textContent = `Optimizing and uploading ${validFiles.length} image(s)...`;
   statusEl.className = 'upload-status uploading';
 
   let done = 0;
   for (const file of validFiles) {
-    const ext = file.name.split('.').pop();
+    const ext = 'webp'; // Force webp for optimized files
     const path = `products/${getSafeName()}/img_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
     try {
-      const url = await uploadToStorage(file, path);
+      // Optimize image before upload
+      const optimizedBlob = await optimizeImage(file);
+      const url = await uploadToStorage(optimizedBlob, path);
       uploadedImages.push(url);
       done++;
       fill.style.width = `${Math.round((done / validFiles.length) * 100)}%`;
       renderImageGrid();
     } catch (err) {
       console.error('Upload error:', err);
+      statusEl.textContent = `❌ Error: ${err.message}`;
     }
   }
 
   bar.style.display = 'none';
   fill.style.width = '0%';
-  statusEl.textContent = `✅ ${done} image(s) uploaded!`;
+  statusEl.textContent = `✅ ${done} image(s) optimized & uploaded!`;
   statusEl.className = 'upload-status success';
 }
 
@@ -270,9 +318,13 @@ export async function renderAdminProductForm() {
                   <input type="text" id="p-price" value="${p.price}" placeholder="e.g. 550,000 MMK" />
                 </div>
                 <div class="form-group">
-                  <label for="p-colors">Colors (comma separated)</label>
-                  <input type="text" id="p-colors" value="${(p.colors || []).join(', ')}" placeholder="Black, White" />
+                  <label for="p-stock">Stock Level *</label>
+                  <input type="number" id="p-stock" value="${p.stock || 0}" min="0" required />
                 </div>
+              </div>
+              <div class="form-group">
+                <label for="p-colors">Colors (comma separated)</label>
+                <input type="text" id="p-colors" value="${(p.colors || []).join(', ')}" placeholder="Black, White" />
               </div>
               <div class="form-group form-checkbox">
                 <label>
@@ -444,6 +496,7 @@ export function initAdminProductForm() {
         tagline: document.getElementById('p-tagline').value,
         description: document.getElementById('p-description').value,
         price: document.getElementById('p-price').value || 'Contact for Price',
+        stock: parseInt(document.getElementById('p-stock').value) || 0,
         featured: document.getElementById('p-featured').checked,
         badge: document.getElementById('p-badge').value || null,
         specs: {

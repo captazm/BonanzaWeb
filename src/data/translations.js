@@ -60,6 +60,7 @@ export const translations = {
         // Product card
         product_series_suffix: 'Series',
         product_view_details: 'View Details',
+        product_add_to_cart: 'Add to Cart',
 
         // Product detail modal
         product_specs_title: '⚙️ Technical Specifications',
@@ -78,6 +79,35 @@ export const translations = {
         spec_camera: 'Camera',
         spec_stylus: 'Stylus',
         spec_extras: 'Additional Features',
+
+        // Cart
+        cart_title: 'Shopping Cart',
+        cart_empty: 'Your cart is empty',
+        cart_shop_now: 'Shop Now',
+        cart_total: 'Subtotal',
+        cart_remove: 'Remove',
+        cart_checkout: 'Proceed to Checkout',
+        cart_clear: 'Clear Cart',
+        cart_clear_confirm: 'Are you sure you want to clear all items from your cart?',
+        cart_added_confirm: 'Item added to cart! Would you like to view your cart?',
+
+        // Checkout
+        checkout_title: 'Checkout',
+        checkout_subtitle: 'Complete your order information below.',
+        checkout_form_name: 'Full Name',
+        checkout_form_phone: 'Phone Number',
+        checkout_form_email: 'Email (Optional)',
+        checkout_form_address: 'Delivery Address',
+        checkout_form_city: 'City',
+        checkout_form_delivery: 'Delivery Method',
+        checkout_delivery_standard: 'Standard Delivery (2-3 days)',
+        checkout_delivery_express: 'Express Delivery (Next day)',
+        checkout_order_summary: 'Order Summary',
+        checkout_place_order: 'Confirm & Place Order',
+        checkout_success_title: 'Order Placed Successfully!',
+        checkout_success_msg: 'Thank you for your order! We will contact you shortly to confirm delivery.',
+        checkout_back_home: 'Back to Home',
+        checkout_items: 'items',
 
         // About page
         about_title: 'About Bonanza',
@@ -226,6 +256,7 @@ export const translations = {
         // Product card
         product_series_suffix: 'စီးရီး',
         product_view_details: 'အသေးစိတ် ကြည့်ရှုရန်',
+        product_add_to_cart: 'ဝယ်ယူရန် ထည့်သွင်းမည်',
 
         // Product detail modal
         product_specs_title: '⚙️ နည်းပညာ သတ်မှတ်ချက်များ',
@@ -244,6 +275,35 @@ export const translations = {
         spec_camera: 'ကင်မရာ',
         spec_stylus: 'စတိုင်းလပ်စ် (ကလောင်တံ)',
         spec_extras: 'အခြား အင်္ဂါရပ်များ',
+
+        // Cart
+        cart_title: 'ဈေးဝယ်လှည်း',
+        cart_empty: 'သင့်ဈေးဝယ်လှည်းထဲတွင် ဘာမှမရှိသေးပါ',
+        cart_shop_now: 'အခုပဲ ဝယ်ယူရန်',
+        cart_total: 'စုစုပေါင်း',
+        cart_remove: 'ဖယ်ရှားရန်',
+        cart_checkout: 'ငွေပေးချေရန်',
+        cart_clear: 'လှည်းကို ရှင်းလင်းရန်',
+        cart_clear_confirm: 'ဈေးဝယ်လှည်းထဲရှိ ပစ္စည်းအားလုံးကို ဖယ်ရှားမှာ သေချာပါသလား။',
+        cart_added_confirm: 'ပစ္စည်းကို ဈေးဝယ်လှည်းထဲသို့ ထည့်ပြီးပါပြီ။ ဈေးဝယ်လှည်းကို ကြည့်လိုပါသလား။',
+
+        // Checkout
+        checkout_title: 'ငွေပေးချေခြင်း',
+        checkout_subtitle: 'သင့်မှာယူမှုအတွက် လိုအပ်သောအချက်အလက်များကို ဖြည့်စွက်ပေးပါ။',
+        checkout_form_name: 'အမည်အပြည့်အစုံ',
+        checkout_form_phone: 'ဖုန်းနံပါတ်',
+        checkout_form_email: 'အီးမေးလ် (မထည့်လည်းရသည်)',
+        checkout_form_address: 'ပို့ဆောင်ရမည့် လိပ်စာ',
+        checkout_form_city: 'မြို့နယ်',
+        checkout_form_delivery: 'ပို့ဆောင်ရေးစနစ်',
+        checkout_delivery_standard: 'သာမန် ပို့ဆောင်ရေး (၂-၃ ရက်)',
+        checkout_delivery_express: 'အမြန် ပို့ဆောင်ရေး (နောက်နေ့အရောက်)',
+        checkout_order_summary: 'မှာယူမှု အကျဉ်းချုပ်',
+        checkout_place_order: 'မှာယူမှုကို အတည်ပြုရန်',
+        checkout_success_title: 'မှာယူမှု အောင်မြင်ပါသည်။',
+        checkout_success_msg: 'မှာယူမှုအတွက် ကျေးဇူးတင်ပါသည်။ ပို့ဆောင်မှုအတွက် အတည်ပြုရန် မကြာမီ ဆက်သွယ်ပေးပါမည်။',
+        checkout_back_home: 'ပင်မစာမျက်နှာသို့ ပြန်သွားရန်',
+        checkout_items: 'ခု',
 
         // About page
         about_title: 'Bonanza အကြောင်း',

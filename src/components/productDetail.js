@@ -1,4 +1,5 @@
 import { t } from '../i18n.js';
+import { addToCart } from '../data/cart.js';
 
 export function renderProductDetail(product) {
   const specs = product.specs;
@@ -89,9 +90,11 @@ export function renderProductDetail(product) {
         </div>
 
         <div class="modal-footer">
-          <a href="#contact" class="btn btn-primary" id="modal-enquire-btn">
+          <button class="btn btn-primary" id="modal-atc-btn">
+            🛒 ${t('product_add_to_cart') || 'Add to Cart'}
+          </button>
+          <a href="#contact" class="btn btn-secondary" id="modal-enquire-btn">
             ${t('product_enquire')}
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </a>
           <button class="btn btn-secondary" id="modal-close-btn-2">${t('product_close')}</button>
         </div>
@@ -100,13 +103,14 @@ export function renderProductDetail(product) {
   `;
 }
 
-export function initProductDetail() {
+export function initProductDetail(product) {
   const modal = document.getElementById('product-modal');
   if (!modal) return;
 
   const closeBtn = document.getElementById('modal-close-btn');
   const closeBtn2 = document.getElementById('modal-close-btn-2');
   const enquireBtn = document.getElementById('modal-enquire-btn');
+  const atcBtn = document.getElementById('modal-atc-btn');
 
   const close = () => {
     modal.classList.remove('active');
@@ -117,6 +121,14 @@ export function initProductDetail() {
   closeBtn?.addEventListener('click', close);
   closeBtn2?.addEventListener('click', close);
   enquireBtn?.addEventListener('click', () => { close(); });
+  atcBtn?.addEventListener('click', () => {
+    addToCart(product);
+    close();
+    // Prompt to open cart
+    if (confirm(t('cart_added_confirm') || `${product.name} added to cart! View cart?`)) {
+      window.dispatchEvent(new CustomEvent('toggle-cart'));
+    }
+  });
   modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
 

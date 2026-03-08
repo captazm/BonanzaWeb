@@ -1,5 +1,6 @@
 import { t, getLang, setLang } from '../i18n.js';
 import { getTheme, setTheme } from '../theme.js';
+import { getCartCount } from '../data/cart.js';
 
 export function renderHeader(currentPage) {
   const lang = getLang();
@@ -26,9 +27,14 @@ export function renderHeader(currentPage) {
         <div class="header-actions">
           <div class="lang-toggle" id="lang-toggle" title="Switch Language">
             <span class="lang-label ${lang === 'en' ? 'active' : ''}" data-lang="en">EN</span>
-            <span class="lang-label ${lang === 'my' ? 'active' : ''}" data-lang="my">မြ</span>
+            <span class="lang-label ${lang === 'my' ? 'active' : ''}" data-lang="my">မြန်မာ</span>
             <span class="lang-slider"></span>
           </div>
+
+          <button class="cart-toggle" id="cart-toggle" title="View Cart">
+            <span class="cart-icon">🛒</span>
+            <span id="cart-badge" class="cart-badge" style="${getCartCount() > 0 ? '' : 'display:none'}">${getCartCount()}</span>
+          </button>
 
           <button class="theme-toggle" id="theme-toggle" title="${theme === 'dark' ? t('theme_light') : t('theme_dark')}">
             <span class="sun-icon">☀️</span>
@@ -99,4 +105,18 @@ export function initHeader(onLangChange) {
       themeToggle.title = next === 'dark' ? t('theme_light') : t('theme_dark');
     });
   }
+
+  // Cart update listener
+  window.addEventListener('cart-updated', (e) => {
+    const badge = document.getElementById('cart-badge');
+    if (badge) {
+      badge.textContent = e.detail.count;
+      badge.style.display = e.detail.count > 0 ? 'flex' : 'none';
+    }
+  });
+
+  // Cart toggle
+  document.getElementById('cart-toggle')?.addEventListener('click', () => {
+    window.dispatchEvent(new CustomEvent('toggle-cart'));
+  });
 }

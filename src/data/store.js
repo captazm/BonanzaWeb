@@ -9,6 +9,7 @@ const KEYS = {
     products: 'bonanza_products',
     posts: 'bonanza_posts',
     auth: 'bonanza_auth',
+    orders: 'bonanza_orders',
 };
 
 const ADMIN_PASSWORD = 'bonanza2019';
@@ -42,19 +43,25 @@ export async function getProducts() {
 }
 
 export async function saveProduct(product) {
+    const productData = {
+        ...product,
+        stock: parseInt(product.stock) || 0,
+        updatedAt: new Date().toISOString()
+    };
+
     try {
-        await setDoc(doc(db, "products", product.id), product);
+        await setDoc(doc(db, "products", productData.id), productData);
     } catch (error) {
         console.error('Firebase save error:', error);
     }
 
     // Always update local for redundancy/fallback
     const products = await getProducts();
-    const idx = products.findIndex((p) => p.id === product.id);
+    const idx = products.findIndex((p) => p.id === productData.id);
     if (idx >= 0) {
-        products[idx] = product;
+        products[idx] = productData;
     } else {
-        products.push(product);
+        products.push(productData);
     }
     localStorage.setItem(KEYS.products, JSON.stringify(products));
     return products;
@@ -193,6 +200,94 @@ export async function markMessageAsRead(id) {
         console.error('Firebase message update error:', error);
         return false;
     }
+}
+
+// ========================================
+// Orders / Sales
+// ========================================
+export async function getOrders() {
+    try {
+        const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+        console.error('Firebase orders fetch error:', error);
+        return [];
+    }
+}
+
+export async function saveOrder(order) {
+    const enrichedOrder = {
+        ...order,
+        id: order.id || `ord_${Date.now()}`,
+        createdAt: new Date().toISOString()
+    };
+
+    try {
+        await setDoc(doc(db, "orders", enrichedOrder.id), enrichedOrder);
+        return true;
+    } catch (error) {
+        console.error('Firebase order save error:', error);
+        return false;
+    }
+}
+
+export async function recordSale(productId, quantity, customerName, price) {
+    try {
+        const products = await getProducts();
+        const product = products.find(p => p.id === productId);
+        if (!product) return false;
+
+        const order = {
+            productId,
+            productName: product.name,
+            quantity,
+            price,
+            total: price * quantity,
+            customerName: customerName || 'Walk-in Customer',
+            type: 'manual',
+            status: 'completed',
+            createdAt: new Date().toISOString()
+        };
+
+        const ok = await saveOrder(order);
+        if (ok) {
+            product.stock = Math.max(0, (product.stock || 0) - quantity);
+            await saveProduct(product);
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.error('Record sale error:', error);
+        return false;
+    }
+}
+
+/**
+ * Places a full order from the website.
+ * Decrements stock for all items and saves the order.
+ */
+export async function placeOrder(orderData) {
+    const products = await getProducts();
+
+    // 1. Check stock for all items first
+    for (const item of orderData.items) {
+        const product = products.find(p => p.id === item.id);
+        if (!product || (product.stock || 0) < item.quantity) {
+            throw new Error(`Insufficient stock for ${product?.name || 'unknown product'}`);
+        }
+    }
+
+    // 2. Decrement stock
+    for (const item of orderData.items) {
+        const productIdx = products.findIndex(p => p.id === item.id);
+        const product = products[productIdx];
+        product.stock -= item.quantity;
+        await saveProduct(product);
+    }
+
+    // 3. Save Order
+    return await saveOrder(orderData);
 }
 
 // ========================================
