@@ -505,9 +505,10 @@ h6 {
 }
 
 .logo-img {
-  width: 44px;
-  height: 36px;
+  height: 52px;
+  width: auto;
   object-fit: contain;
+  border-radius: 8px;
 }
 
 .logo-text {
@@ -3164,6 +3165,7 @@ h6 {
   padding: 2px 0;
   letter-spacing: 0.05em;
 }
+
 /* ========================================
    Admin Additions (Stocks & Sales)
    ======================================== */
@@ -3189,8 +3191,15 @@ h6 {
 }
 
 @keyframes pulse-glow-red {
-  0%, 100% { box-shadow: 0 0 5px rgba(239, 68, 68, 0.1); }
-  50% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.3); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 5px rgba(239, 68, 68, 0.1);
+  }
+
+  50% {
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+  }
 }
 
 /* Admin Modal */
@@ -3218,8 +3227,15 @@ h6 {
 }
 
 @keyframes modalSlideUp {
-  from { opacity: 0; transform: translateY(40px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .admin-modal h3 {
@@ -3239,7 +3255,8 @@ h6 {
   margin-bottom: var(--space-xs);
 }
 
-.admin-modal input, .admin-modal select {
+.admin-modal input,
+.admin-modal select {
   width: 100%;
   background: var(--bg-tertiary);
   border: 1px solid var(--border-medium);
@@ -3250,7 +3267,8 @@ h6 {
   transition: all var(--transition-fast);
 }
 
-.admin-modal input:focus, .admin-modal select:focus {
+.admin-modal input:focus,
+.admin-modal select:focus {
   outline: none;
   border-color: var(--accent-primary);
   box-shadow: 0 0 0 2px var(--accent-glow);

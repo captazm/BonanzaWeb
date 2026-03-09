@@ -55,16 +55,19 @@ export async function saveProduct(product) {
         console.error('Firebase save error:', error);
     }
 
-    // Always update local for redundancy/fallback
-    const products = await getProducts();
-    const idx = products.findIndex((p) => p.id === productData.id);
+    // Update localStorage directly using current cache — do NOT re-fetch from
+    // Firestore here, as a slow/stale response could overwrite the new images.
+    const stored = localStorage.getItem(KEYS.products);
+    let cached = [];
+    try { cached = stored ? JSON.parse(stored) : []; } catch { cached = []; }
+    const idx = cached.findIndex((p) => p.id === productData.id);
     if (idx >= 0) {
-        products[idx] = productData;
+        cached[idx] = productData;
     } else {
-        products.push(productData);
+        cached.push(productData);
     }
-    localStorage.setItem(KEYS.products, JSON.stringify(products));
-    return products;
+    localStorage.setItem(KEYS.products, JSON.stringify(cached));
+    return cached;
 }
 
 export async function deleteProduct(id) {

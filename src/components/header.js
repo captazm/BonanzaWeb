@@ -10,11 +10,7 @@ export function renderHeader(currentPage) {
     <header class="header" id="main-header">
       <div class="header-inner">
         <a href="#home" class="logo">
-          <img src="/logo.svg" alt="Bonanza" class="logo-img" />
-          <div class="logo-text">
-            <span class="logo-name">BONANZA</span>
-            <span class="logo-sub">${t('logo_sub')}</span>
-          </div>
+          <img src="/logo.png" alt="Bonanza E-Reader Store" class="logo-img" />
         </a>
         <nav class="nav" id="main-nav">
           <a href="#home" class="nav-link ${currentPage === 'home' ? 'active' : ''}" data-nav="home">${t('nav_home')}</a>
