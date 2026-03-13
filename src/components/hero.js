@@ -38,11 +38,7 @@ export function renderHero() {
         <div class="hero-visual">
           <div class="hero-orbit"></div>
           <div class="hero-device">
-            <div class="hero-device-inner">
-              <div class="hero-device-icon">📱</div>
-              <div class="hero-device-name">BOOX Palma 2 Pro</div>
-              <div class="hero-device-tag">${t('hero_device_tag')}</div>
-            </div>
+            <img src="/images/hero-device.png" alt="BOOX Device" class="hero-device-img">
           </div>
         </div>
       </div>

@@ -189,6 +189,32 @@ export const products = [
         video: '/images/products/go7.mp4'
     },
     {
+        id: 'go6',
+        name: 'BOOX Go 6',
+        series: 'Go',
+        tagline: '6" Pocket ePaper Reader for Your Chill Time',
+        description: 'A pocket-sized 6" ePaper reader with E Ink Carta 1300 display at 300 PPI, open Android 11 OS, built-in Google Play Store, and warm & cold front lights. Sleek at just 6.8mm thick and 146g, it\'s the perfect companion for reading on the go.',
+        price: 'Contact for Price',
+        featured: true,
+        badge: 'NEW',
+        specs: {
+            screen: '6" HD ePaper glass screen with flat cover-lens',
+            resolution: '1448×1072 (300 ppi)',
+            cpu: '2.0GHz Octa-core',
+            ram: '2GB',
+            storage: '32GB',
+            os: 'Android 11',
+            connectivity: 'Wi-Fi (2.4GHz + 5GHz) + BT 5.0',
+            battery: '1,500mAh Li-ion Polymer',
+            weight: '146g (5.15 oz)',
+            dimensions: '148 × 108 × 6.8 mm',
+            extras: 'Front Light (Warm/Cold CTM), Power Button, Built-in Mic, microSD, USB-C (OTG/Audio)'
+        },
+        colors: ['Black'],
+        image: '/images/products/go6.jpg',
+        video: '/images/products/go6.mp4'
+    },
+    {
         id: 'page',
         name: 'BOOX Page',
         series: 'Page',

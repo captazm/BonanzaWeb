@@ -808,7 +808,7 @@ h6 {
 .hero-device {
   position: relative;
   width: 320px;
-  height: 450px;
+  height: 480px;
   background: var(--gradient-card);
   border-radius: var(--radius-xl);
   border: 1px solid var(--border-medium);
@@ -820,6 +820,18 @@ h6 {
   overflow: hidden;
 }
 
+.hero-device-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: var(--space-md);
+  transition: transform var(--transition-base);
+}
+
+.hero-device:hover .hero-device-img {
+  transform: scale(1.05);
+}
+
 .hero-device::before {
   content: '';
   position: absolute;
@@ -829,28 +841,6 @@ h6 {
   animation: shimmer 3s ease-in-out infinite;
 }
 
-.hero-device-inner {
-  text-align: center;
-  z-index: 1;
-  padding: var(--space-xl);
-}
-
-.hero-device-icon {
-  font-size: 4rem;
-  margin-bottom: var(--space-md);
-}
-
-.hero-device-name {
-  font-family: var(--font-heading);
-  font-size: 1.2rem;
-  font-weight: 700;
-  margin-bottom: var(--space-sm);
-}
-
-.hero-device-tag {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-}
 
 .hero-orbit {
   position: absolute;
@@ -1283,9 +1273,19 @@ h6 {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 4rem;
   position: relative;
   overflow: hidden;
+}
+
+.about-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-base);
+}
+
+.about-image:hover .about-img {
+  transform: scale(1.05);
 }
 
 .about-image::before {

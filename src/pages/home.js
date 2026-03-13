@@ -53,7 +53,7 @@ export async function renderHome() {
       <div class="container">
         <div class="about-grid">
           <div class="about-image animate-on-scroll">
-            📖✨
+            <img src="/images/about-home.png" alt="Bonanza E-Reader Store" class="about-img">
           </div>
           <div class="about-content">
             <h2 class="section-title animate-on-scroll">${t('home_about_title')}</h2>

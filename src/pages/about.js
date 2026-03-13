@@ -13,7 +13,7 @@ export function renderAbout() {
       <div class="container">
         <div class="about-grid">
           <div class="about-image animate-on-scroll">
-            🏪✨
+            <img src="/images/store-photo.png" alt="Bonanza Store" class="about-img">
           </div>
           <div class="about-content">
             <h2 class="animate-on-scroll" style="font-size: 1.8rem; font-weight: 700; margin-bottom: var(--space-lg);">${t('about_story_title')}</h2>
