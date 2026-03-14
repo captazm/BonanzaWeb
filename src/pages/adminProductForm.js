@@ -88,10 +88,10 @@ function renderImageGrid() {
   if (!grid) return;
 
   grid.innerHTML = uploadedImages.map((url, i) => `
-    <div class="img-thumb-item" data-index="${i}">
+    <div class="img-thumb-item" data-index="${i}" draggable="true">
       <img src="${url}" alt="Image ${i + 1}">
       <button type="button" class="img-thumb-remove" data-index="${i}" title="Remove">✕</button>
-      ${i === 0 ? '<span class="img-thumb-cover">Cover</span>' : ''}
+      ${i === 0 ? '<span class="img-thumb-cover">Cover</span>' : `<button type="button" class="img-thumb-make-cover" data-index="${i}" title="Make Cover">Set Cover</button>`}
     </div>
   `).join('');
 
@@ -102,6 +102,71 @@ function renderImageGrid() {
       const idx = parseInt(btn.dataset.index);
       uploadedImages.splice(idx, 1);
       renderImageGrid();
+    });
+  });
+
+  // Make cover handlers
+  grid.querySelectorAll('.img-thumb-make-cover').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.index);
+      const [item] = uploadedImages.splice(idx, 1);
+      uploadedImages.unshift(item); // move to front
+      renderImageGrid();
+    });
+  });
+
+  // Drag and drop to rearrange
+  let dragSrcEl = null;
+  grid.querySelectorAll('.img-thumb-item').forEach(item => {
+    item.addEventListener('dragstart', (e) => {
+      dragSrcEl = item;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', item.dataset.index);
+      item.style.opacity = '0.5';
+    });
+    
+    item.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      return false;
+    });
+
+    item.addEventListener('dragenter', (e) => {
+      if (item !== dragSrcEl) {
+        item.style.borderStyle = 'dashed';
+        item.style.borderColor = 'var(--accent-primary)';
+      }
+    });
+
+    item.addEventListener('dragleave', (e) => {
+      item.style.borderStyle = 'solid';
+      item.style.borderColor = 'var(--border-subtle)';
+    });
+
+    item.addEventListener('drop', (e) => {
+      e.stopPropagation();
+      item.style.borderStyle = 'solid';
+      item.style.borderColor = 'var(--border-subtle)';
+      if (dragSrcEl !== item) {
+        const fromIdx = parseInt(dragSrcEl.dataset.index);
+        const toIdx = parseInt(item.dataset.index);
+        
+        // Remove item from old position
+        const [movedItem] = uploadedImages.splice(fromIdx, 1);
+        // Insert into new position
+        uploadedImages.splice(toIdx, 0, movedItem);
+        renderImageGrid();
+      }
+      return false;
+    });
+
+    item.addEventListener('dragend', (e) => {
+      grid.querySelectorAll('.img-thumb-item').forEach(i => {
+        i.style.opacity = '1';
+        i.style.borderStyle = 'solid';
+        i.style.borderColor = 'var(--border-subtle)';
+      });
     });
   });
 
@@ -195,6 +260,8 @@ async function handleVideoFile(file) {
         vid.className = 'media-preview-video';
         box.prepend(vid);
       }
+      const removeBtn = document.getElementById('remove-video-btn');
+      if (removeBtn) removeBtn.style.display = 'inline-block';
     }
   );
 }
@@ -220,7 +287,33 @@ function initImageUploadZone() {
 function initVideoUploadZone() {
   const box = document.getElementById('video-upload-box');
   const fileInput = document.getElementById('p-video-file');
+  const removeBtn = document.getElementById('remove-video-btn');
+  const hiddenInput = document.getElementById('p-video');
+  const statusEl = document.getElementById('video-upload-status');
   if (!box || !fileInput) return;
+
+  if (removeBtn) {
+    removeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      hiddenInput.value = '';
+      if (fileInput) fileInput.value = '';
+      box.querySelector('.media-preview-video')?.remove();
+      if (!box.querySelector('.media-upload-placeholder')) {
+        box.insertAdjacentHTML('afterbegin', `
+          <div class="media-upload-placeholder">
+            <span class="upload-icon">🎬</span>
+            <span>Click or drag &amp; drop a video</span>
+            <span class="upload-hint">MP4, WebM — max 100MB recommended</span>
+          </div>
+        `);
+      }
+      removeBtn.style.display = 'none';
+      if (statusEl) {
+        statusEl.textContent = 'Video removed.';
+        statusEl.className = 'upload-status';
+      }
+    });
+  }
 
   box.addEventListener('click', () => fileInput.click());
   box.addEventListener('dragover', (e) => { e.preventDefault(); box.classList.add('drag-over'); });
@@ -371,7 +464,10 @@ export async function renderAdminProductForm() {
 
               <!-- Video upload -->
               <div class="form-group">
-                <label>Product Video (optional)</label>
+                <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+                  <label>Product Video (optional)</label>
+                  <button type="button" id="remove-video-btn" class="btn btn-secondary" style="padding:4px 8px; font-size:0.8rem; margin-bottom:var(--space-xs); ${p.video ? '' : 'display:none;'}">Remove Video</button>
+                </div>
                 <div class="media-upload-box" id="video-upload-box">
                   ${p.video ? `<video src="${p.video}" controls class="media-preview-video"></video>` : `
                     <div class="media-upload-placeholder">

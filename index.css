@@ -3167,6 +3167,39 @@ h6 {
   letter-spacing: 0.05em;
 }
 
+.img-thumb-make-cover {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 4px 0;
+  border: none;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--transition-fast), background var(--transition-fast);
+}
+
+.img-thumb-make-cover:hover {
+  background: var(--accent-primary);
+}
+
+.img-thumb-item:hover .img-thumb-make-cover {
+  opacity: 1;
+}
+
+.img-thumb-item[draggable="true"] {
+  cursor: grab;
+}
+
+.img-thumb-item[draggable="true"]:active {
+  cursor: grabbing;
+}
+
 /* ========================================
    Admin Additions (Stocks & Sales)
    ======================================== */
