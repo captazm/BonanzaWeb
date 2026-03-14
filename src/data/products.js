@@ -239,6 +239,32 @@ export const products = [
         colors: ['Black'],
         image: '/images/products/page.jpg',
         video: '/images/products/page.mp4'
+    },
+    {
+        id: 'go103',
+        name: 'BOOX Go 10.3',
+        series: 'Go',
+        tagline: '10.3" HD E Ink Carta 1200 glass screen',
+        description: 'The BOOX Go 10.3 is an ultra-thin and lightweight monochrome ePaper device. With a 300 PPI screen, a 2.4GHz CPU, and a range of note-taking tools, capture your ideas with the flexibility to unleash your creative mind.',
+        price: '1,400,000 MMK',
+        featured: false,
+        badge: 'NEW',
+        specs: {
+            screen: '10.3" HD ePaper glass screen with flat cover-lens',
+            resolution: '2480x1860 (300 ppi)',
+            cpu: '2.4GHz Octa-core',
+            ram: '4GB',
+            storage: '64GB',
+            os: 'Android 12',
+            connectivity: 'Wi-Fi (2.4GHz + 5GHz) + BT 5.0',
+            battery: '3,700mAh Li-ion Polymer',
+            weight: '375g (13.2oz)',
+            dimensions: '235 × 183 × 4.6 mm',
+            extras: 'Power Button, Built-in Dual Speakers, Built-in Microphone, USB-C (OTG/Audio)'
+        },
+        colors: ['White'],
+        image: '/images/products/go103.jpg',
+        video: ''
     }
 ];
 
