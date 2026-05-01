@@ -54,7 +54,7 @@ export function renderFooter() {
         <div class="footer-bottom">
           <p>&copy; ${new Date().getFullYear()} ${t('footer_copyright')}</p>
           <div class="footer-socials">
-            <a href="#" class="social-link" aria-label="Facebook" title="Facebook">f</a>
+            <a href="https://www.facebook.com/BonanzaEreaderStore" target="_blank" rel="noopener" class="social-link" aria-label="Facebook" title="Facebook">f</a>
             <a href="#" class="social-link" aria-label="Viber" title="Viber">V</a>
             <a href="#" class="social-link" aria-label="Telegram" title="Telegram">T</a>
           </div>
