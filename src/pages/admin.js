@@ -1,4 +1,4 @@
-import { getProducts, deleteProduct, getPosts, deletePost, getMessages, deleteMessage, markMessageAsRead, subscribeToMessages, logout, getMaintenanceMode, setMaintenanceMode, getOrders, recordSale } from '../data/store.js';
+import { getProducts, deleteProduct, getPosts, deletePost, getMessages, deleteMessage, markMessageAsRead, subscribeToMessages, logout, getMaintenanceMode, setMaintenanceMode, getOrders, recordSale, saveOrderNote, subscribeToOrderNotes, deleteOrderNote, updateOrderNoteStatus } from '../data/store.js';
 
 export async function renderAdmin() {
   const products = await getProducts();
@@ -25,6 +25,10 @@ export async function renderAdmin() {
             </button>
             <button class="admin-nav-btn" data-tab="sales">
               <span>💰</span> Sales
+            </button>
+            <button class="admin-nav-btn" data-tab="phone-orders">
+              <span>📞</span> Phone Orders
+              <span id="phone-orders-badge" class="badge-count" style="display:none">0</span>
             </button>
             <button class="admin-nav-btn" data-tab="settings">
               <span>⚙️</span> Settings
@@ -196,6 +200,17 @@ export async function renderAdmin() {
                 </tbody>
               </table>
               <div id="sales-empty-msg" class="admin-empty">No sales recorded yet.</div>
+            </div>
+          </div>
+
+          <!-- Phone Orders Tab -->
+          <div class="admin-tab" id="tab-phone-orders">
+            <div class="admin-tab-header">
+              <h2>📞 Phone Orders</h2>
+              <button class="btn btn-primary" id="add-order-note-btn">+ Quick Note</button>
+            </div>
+            <div id="phone-orders-container">
+              <p class="admin-empty">Loading...</p>
             </div>
           </div>
 
@@ -425,6 +440,169 @@ export function initAdmin() {
   };
 
   loadSales();
+
+  // ── Phone Order Notes ──────────────────────────────────────────────
+  const phoneOrdersUnsubscribe = subscribeToOrderNotes((notes) => {
+    const container = document.getElementById('phone-orders-container');
+    const badge = document.getElementById('phone-orders-badge');
+    const pendingCount = notes.filter(n => n.status === 'pending').length;
+
+    if (badge) {
+      badge.textContent = pendingCount;
+      badge.style.display = pendingCount > 0 ? 'flex' : 'none';
+    }
+
+    if (!container) return;
+
+    if (notes.length === 0) {
+      container.innerHTML = '<p class="admin-empty">No phone orders yet. Click "+ Quick Note" to add one.</p>';
+      return;
+    }
+
+    const statusColor = { pending: '#f59e0b', confirmed: '#3b82f6', done: '#10b981', cancelled: '#ef4444' };
+    const statusLabel = { pending: '⏳ Pending', confirmed: '✅ Confirmed', done: '✔️ Done', cancelled: '❌ Cancelled' };
+
+    container.innerHTML = `
+      <div class="admin-table-wrap glass-card">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>📞 Phone</th>
+              <th>Customer</th>
+              <th>Items Ordered</th>
+              <th>Notes</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${notes.map(n => `
+              <tr>
+                <td style="white-space:nowrap; font-size:0.8rem; color:var(--text-tertiary)">${new Date(n.createdAt).toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })}</td>
+                <td><strong style="color:var(--accent-primary)">${n.phone}</strong></td>
+                <td>${n.customerName || '<span style="color:var(--text-tertiary)">—</span>'}</td>
+                <td style="max-width:180px">${n.items || '<span style="color:var(--text-tertiary)">—</span>'}</td>
+                <td style="max-width:180px; font-size:0.85rem">${n.notes || '<span style="color:var(--text-tertiary)">—</span>'}</td>
+                <td>
+                  <select class="order-note-status-select" data-note-id="${n.id}" style="background:var(--bg-secondary); color:${statusColor[n.status] || '#fff'}; border:1px solid ${statusColor[n.status] || 'var(--border-medium)'}; border-radius:6px; padding:4px 8px; font-size:0.8rem; cursor:pointer">
+                    <option value="pending" ${n.status==='pending'?'selected':''}>⏳ Pending</option>
+                    <option value="confirmed" ${n.status==='confirmed'?'selected':''}>✅ Confirmed</option>
+                    <option value="done" ${n.status==='done'?'selected':''}>✔️ Done</option>
+                    <option value="cancelled" ${n.status==='cancelled'?'selected':''}>❌ Cancelled</option>
+                  </select>
+                </td>
+                <td>
+                  <button class="admin-action-btn delete" data-delete-note="${n.id}" title="Delete">🗑️</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    // Status change listeners
+    container.querySelectorAll('.order-note-status-select').forEach(sel => {
+      sel.addEventListener('change', async () => {
+        await updateOrderNoteStatus(sel.dataset.noteId, sel.value);
+        showAdminNotification(`Status updated to ${sel.value}`);
+      });
+    });
+
+    // Delete listeners
+    container.querySelectorAll('[data-delete-note]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (confirm('Delete this order note?')) {
+          await deleteOrderNote(btn.dataset.deleteNote);
+          showAdminNotification('Order note deleted');
+        }
+      });
+    });
+  });
+
+  window.phoneOrdersUnsubscribe = phoneOrdersUnsubscribe;
+
+  // Quick Note Modal
+  document.getElementById('add-order-note-btn')?.addEventListener('click', async () => {
+    const products = await (async () => { try { const { getProducts } = await import('../data/store.js'); return await getProducts(); } catch { return []; } })();
+    const productOptions = products.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+
+    const modalHtml = `
+      <div class="admin-modal-overlay" id="order-note-modal">
+        <div class="admin-modal glass-card" style="max-width:520px">
+          <h3>📞 Quick Phone Order Note</h3>
+          <div style="display:flex; flex-direction:column; gap:var(--space-lg); margin-top:var(--space-xl)">
+            <div class="form-row">
+              <div class="form-group">
+                <label>📞 Phone Number <span style="color:var(--accent-primary)">*</span></label>
+                <input type="tel" id="on-phone" placeholder="09xxxxxxxxx" required />
+              </div>
+              <div class="form-group">
+                <label>👤 Customer Name</label>
+                <input type="text" id="on-name" placeholder="Optional" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>📦 Items Ordered</label>
+              <select id="on-product-select" style="margin-bottom:8px">
+                <option value="">Select product to add...</option>
+                ${productOptions}
+              </select>
+              <input type="text" id="on-items" placeholder="e.g. iPhone 16 Pro Case x2, Lightning Cable x1" />
+              <small style="color:var(--text-tertiary)">Select from list or type manually</small>
+            </div>
+            <div class="form-group">
+              <label>📝 Additional Notes</label>
+              <textarea id="on-notes" rows="3" placeholder="Delivery address, color preference, urgent, etc..."></textarea>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn btn-secondary" id="close-note-modal">Cancel</button>
+              <button type="button" class="btn btn-primary" id="save-note-btn">💾 Save Note</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    const modal = document.getElementById('order-note-modal');
+    const productSelect = document.getElementById('on-product-select');
+    const itemsInput = document.getElementById('on-items');
+
+    // Auto-append selected product to items field
+    productSelect.addEventListener('change', () => {
+      if (!productSelect.value) return;
+      const current = itemsInput.value.trim();
+      itemsInput.value = current ? `${current}, ${productSelect.value} x1` : `${productSelect.value} x1`;
+      productSelect.value = '';
+    });
+
+    document.getElementById('close-note-modal').addEventListener('click', () => modal.remove());
+
+    document.getElementById('save-note-btn').addEventListener('click', async () => {
+      const phone = document.getElementById('on-phone').value.trim();
+      if (!phone) {
+        alert('Phone number is required!');
+        return;
+      }
+      const note = {
+        phone,
+        customerName: document.getElementById('on-name').value.trim(),
+        items: itemsInput.value.trim(),
+        notes: document.getElementById('on-notes').value.trim(),
+        status: 'pending'
+      };
+      const saved = await saveOrderNote(note);
+      if (saved) {
+        showAdminNotification('✅ Order note saved!');
+        modal.remove();
+      } else {
+        alert('Failed to save. Please try again.');
+      }
+    });
+  });
 
   // Record Sale Modal
   document.getElementById('record-sale-btn')?.addEventListener('click', async () => {

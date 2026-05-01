@@ -294,6 +294,72 @@ export async function placeOrder(orderData) {
 }
 
 // ========================================
+// Phone Order Notes
+// ========================================
+export async function saveOrderNote(note) {
+    const enrichedNote = {
+        ...note,
+        id: note.id || `note_${Date.now()}`,
+        status: note.status || 'pending',
+        createdAt: note.createdAt || new Date().toISOString()
+    };
+
+    try {
+        await setDoc(doc(db, "orderNotes", enrichedNote.id), enrichedNote);
+        return enrichedNote;
+    } catch (error) {
+        console.error('Firebase order note save error:', error);
+        return null;
+    }
+}
+
+export async function getOrderNotes() {
+    try {
+        const q = query(collection(db, "orderNotes"), orderBy("createdAt", "desc"));
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+        console.error('Firebase order notes fetch error:', error);
+        return [];
+    }
+}
+
+export function subscribeToOrderNotes(callback) {
+    const q = query(collection(db, "orderNotes"), orderBy("createdAt", "desc"));
+    return onSnapshot(q, (snapshot) => {
+        const notes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        callback(notes);
+    });
+}
+
+export async function deleteOrderNote(id) {
+    try {
+        await deleteDoc(doc(db, "orderNotes", id));
+        return true;
+    } catch (error) {
+        console.error('Firebase order note delete error:', error);
+        return false;
+    }
+}
+
+export async function updateOrderNoteStatus(id, status) {
+    try {
+        const snap = await getDoc(doc(db, 'orderNotes', id));
+        if (snap.exists()) {
+            await setDoc(doc(db, 'orderNotes', id), {
+                ...snap.data(),
+                status,
+                updatedAt: new Date().toISOString()
+            });
+        }
+        return true;
+    } catch (error) {
+        console.error('Firebase order note status update error:', error);
+        return false;
+    }
+}
+
+// ========================================
 // Site Settings / Maintenance Mode
 // ========================================
 export async function getMaintenanceMode() {
