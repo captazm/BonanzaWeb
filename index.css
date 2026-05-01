@@ -1748,8 +1748,451 @@ h6 {
 }
 
 /* ========================================
-   Admin Pages
+   Mobile Responsive - Comprehensive Fix
    ======================================== */
+
+/* Admin panel mobile */
+@media (max-width: 768px) {
+  .admin-page {
+    padding: var(--space-md);
+  }
+
+  .admin-container {
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
+  }
+
+  .admin-sidebar {
+    position: static;
+    padding: var(--space-md);
+  }
+
+  .admin-sidebar-header h2 {
+    margin-bottom: var(--space-md);
+    font-size: 1.2rem;
+  }
+
+  .admin-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+  }
+
+  .admin-nav-btn {
+    flex: 1;
+    min-width: 80px;
+    padding: var(--space-sm) var(--space-xs);
+    font-size: 0.75rem;
+    justify-content: center;
+    flex-direction: column;
+    gap: 2px;
+    text-align: center;
+  }
+
+  .admin-nav-logout {
+    width: 100%;
+    margin-top: var(--space-sm);
+  }
+
+  .admin-stats {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-lg);
+  }
+
+  .admin-stat-card {
+    padding: var(--space-md);
+    gap: var(--space-sm);
+  }
+
+  .admin-stat-icon {
+    font-size: 1.5rem;
+    width: 36px;
+    height: 36px;
+  }
+
+  .admin-stat-value {
+    font-size: 1.25rem;
+  }
+
+  .admin-tab-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-md);
+    margin-bottom: var(--space-lg);
+  }
+
+  .admin-tab-header .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Admin tables - horizontal scroll on mobile */
+  .admin-table-wrap {
+    border-radius: var(--radius-md);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-table th,
+  .admin-table td {
+    padding: var(--space-sm) var(--space-md);
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+
+  .admin-product-name strong {
+    font-size: 0.85rem;
+  }
+
+  /* Form rows stack on mobile */
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  /* Admin modal full width on mobile */
+  .admin-modal-overlay {
+    padding: var(--space-sm);
+    align-items: flex-end;
+  }
+
+  .admin-modal {
+    max-width: 100%;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    padding: var(--space-lg);
+  }
+
+  .admin-modal h3 {
+    font-size: 1.2rem;
+    margin-bottom: var(--space-md);
+  }
+
+  .admin-setting-card {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: var(--space-lg);
+  }
+
+  /* Message cards */
+  .message-card-header {
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .message-meta {
+    align-items: flex-start;
+    flex-direction: row;
+    gap: var(--space-md);
+  }
+
+  /* Notifications bottom */
+  .admin-notifications {
+    bottom: var(--space-md);
+    right: var(--space-md);
+    left: var(--space-md);
+  }
+
+  .admin-toast {
+    min-width: unset;
+    width: 100%;
+  }
+
+  /* Checkout grid stack */
+  .checkout-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Modal full screen on mobile */
+  .modal-overlay {
+    padding: var(--space-sm);
+    align-items: flex-end;
+  }
+
+  .modal {
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    max-height: 95vh;
+  }
+
+  .modal-header,
+  .modal-body,
+  .modal-footer {
+    padding-left: var(--space-md);
+    padding-right: var(--space-md);
+  }
+
+  .modal-product-name {
+    font-size: 1.4rem;
+  }
+
+  .modal-footer {
+    flex-direction: column;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Cart drawer full width */
+  .cart-drawer {
+    max-width: 100%;
+    width: 100%;
+    right: -100%;
+  }
+
+  /* Hero section */
+  .hero-content {
+    padding: calc(var(--header-height) + var(--space-xl)) var(--space-md) var(--space-2xl);
+  }
+
+  /* Products grid 2 col on tablet, 1 col on phone */
+  .products-grid,
+  .featured-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+  }
+
+  .product-card {
+    padding: var(--space-md);
+  }
+
+  .product-card-image {
+    height: 150px;
+  }
+
+  /* Blog grid */
+  .blog-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Footer */
+  .footer {
+    padding: var(--space-2xl) 0 var(--space-lg);
+  }
+}
+
+@media (max-width: 480px) {
+  /* Single column products on very small screens */
+  .products-grid,
+  .featured-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Phone orders table card view on small phones */
+  .admin-table thead {
+    display: none;
+  }
+
+  .admin-table tbody tr {
+    display: block;
+    margin-bottom: var(--space-md);
+    border: 1px solid var(--border-medium);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm);
+  }
+
+  .admin-table tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-subtle);
+    white-space: normal;
+    padding: var(--space-xs) var(--space-sm);
+    font-size: 0.8rem;
+  }
+
+  .admin-table tbody td:last-child {
+    border-bottom: none;
+  }
+
+  .admin-table tbody td::before {
+    content: attr(data-label);
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    min-width: 80px;
+  }
+
+  /* Record sale and phone order buttons */
+  #record-sale-btn,
+  #add-order-note-btn {
+    width: 100%;
+  }
+
+  .hero h1 {
+    font-size: 1.6rem;
+  }
+
+  .section-title {
+    font-size: 1.6rem;
+  }
+
+  .btn {
+    padding: var(--space-sm) var(--space-lg);
+    font-size: 0.85rem;
+  }
+
+  .hero-cta {
+    flex-direction: column;
+  }
+
+  .hero-cta .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ========================================
+   Checkout - Mobile Order Summary Fix
+   ======================================== */
+@media (max-width: 768px) {
+  .order-summary-container {
+    position: static !important;
+    order: -1; /* Show summary above form on mobile */
+  }
+
+  .checkout-form-container {
+    padding: var(--space-lg) !important;
+  }
+
+  .checkout-page .container > h1 {
+    font-size: 1.8rem;
+  }
+}
+
+/* ========================================
+   Blog Post - Mobile Fix
+   ======================================== */
+@media (max-width: 768px) {
+  .blog-post-page {
+    padding-top: calc(var(--header-height) + var(--space-lg));
+  }
+
+  .blog-post-hero {
+    height: 220px;
+  }
+
+  .blog-post-header {
+    padding: var(--space-xl) var(--space-lg) var(--space-md);
+  }
+
+  .blog-post-title {
+    font-size: 1.5rem;
+  }
+
+  .blog-post-excerpt {
+    font-size: 0.95rem;
+  }
+
+  .blog-post-content {
+    padding: var(--space-lg);
+  }
+
+  .blog-post-content h2 {
+    font-size: 1.3rem;
+  }
+
+  .blog-post-footer {
+    padding: var(--space-lg);
+  }
+
+  .blog-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ========================================
+   Header Actions - Mobile Spacing Fix
+   ======================================== */
+@media (max-width: 390px) {
+  .header-actions {
+    gap: var(--space-xs);
+    margin-right: var(--space-xs);
+  }
+
+  .lang-toggle {
+    margin-left: 0;
+  }
+
+  .lang-label {
+    padding: 4px 8px;
+    font-size: 0.68rem;
+    min-width: 34px;
+  }
+
+  .cart-toggle,
+  .theme-toggle {
+    width: 34px;
+    height: 34px;
+    font-size: 0.9rem;
+  }
+
+  .logo-img {
+    height: 52px;
+  }
+
+  .logo-name {
+    font-size: 1rem;
+  }
+
+  .logo-sub {
+    font-size: 0.45rem;
+  }
+}
+
+/* ========================================
+   Page Header - Mobile Padding Fix
+   ======================================== */
+@media (max-width: 768px) {
+  .page-header {
+    padding: calc(var(--header-height) + var(--space-xl)) 0 var(--space-xl);
+  }
+
+  .page-header .section-title {
+    font-size: 2rem;
+  }
+
+  .section-subtitle {
+    font-size: 0.95rem;
+    margin-bottom: var(--space-xl);
+  }
+
+  /* About page milestones grid */
+  .about-grid {
+    gap: var(--space-xl);
+  }
+
+  /* Contact page */
+  .contact-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-xl);
+  }
+
+  .contact-form .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Filter bar wrap nicely */
+  .filter-bar {
+    gap: var(--space-xs);
+  }
+
+  .filter-btn {
+    font-size: 0.78rem;
+    padding: var(--space-xs) var(--space-sm);
+  }
+}
+
 .admin-layout {
   min-height: 100vh;
   background-color: var(--bg-primary);
