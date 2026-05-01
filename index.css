@@ -4493,14 +4493,5 @@ h6 {
 }
 
 .hero-device-showcase::before {
-  content: '';
-  position: absolute;
-  width: 580px; height: 580px;
-  border-radius: 50%;
-  border: 1px dashed rgba(168,85,247,0.08);
-  top: 50%; left: 50%;
-  transform: translate(-50%,-50%);
-  animation: ring-spin-cw 50s linear infinite;
-  pointer-events: none;
-  z-index: 0;
+  display: none;
 }
