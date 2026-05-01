@@ -5,7 +5,7 @@ export const products = [
         series: 'Palma',
         tagline: '6.13" Color Mobile ePaper with 5G',
         description: 'A color mobile ePaper device featuring a Kaleido 3 screen, Android 15, octa-core CPU, BSR technology, 8GB + 128GB storage, a hybrid SIM slot, and supports InkSense Plus stylus. The mindful E Ink gadget to flow with you.',
-        price: 'Contact for Price',
+        price: '1,763,000 MMK',
         featured: true,
         badge: 'NEW',
         specs: {
@@ -32,7 +32,7 @@ export const products = [
         series: 'Palma',
         tagline: '6.13" Mobile ePaper for Mindful Living',
         description: 'A phone-sized mobile ePaper device with Carta 1200 eye-friendly screen, open Android OS, upgraded Octa-core CPU, BSR technology, built-in Google Play Store, and 6GB + 128GB storage. A versatile gadget for your mindful living.',
-        price: 'Contact for Price',
+        price: '1,225,500 MMK',
         featured: true,
         badge: 'POPULAR',
         specs: {
@@ -59,7 +59,7 @@ export const products = [
         series: 'Note',
         tagline: '10.3" Android Color ePaper Notebook',
         description: 'A color E Ink tablet built for creators and achievers. Authentic pen-on-paper writing feel, Android 15 OS, keyboard input support, powered by octa-core CPU with BSR technology.',
-        price: 'Contact for Price',
+        price: '2,322,000 MMK',
         featured: true,
         badge: 'NEW',
         specs: {
@@ -140,7 +140,7 @@ export const products = [
         series: 'Go',
         tagline: '7" Versatile Color ePaper Reader',
         description: 'A pocketable color E Ink reader with Kaleido 3 display, built-in Google Play Store, 4GB + 64GB storage, and InkSense stylus support. Perfect for reading on the go.',
-        price: 'Contact for Price',
+        price: '1,247,000 MMK',
         featured: true,
         badge: 'NEW',
         specs: {
@@ -194,7 +194,7 @@ export const products = [
         series: 'Go',
         tagline: '6" Pocket ePaper Reader for Your Chill Time',
         description: 'A pocket-sized 6" ePaper reader with E Ink Carta 1300 display at 300 PPI, open Android 11 OS, built-in Google Play Store, and warm & cold front lights. Sleek at just 6.8mm thick and 146g, it\'s the perfect companion for reading on the go.',
-        price: 'Contact for Price',
+        price: '731,000 MMK',
         featured: true,
         badge: 'NEW',
         specs: {
@@ -246,7 +246,7 @@ export const products = [
         series: 'Go',
         tagline: '10.3" HD E Ink Carta 1200 glass screen',
         description: 'The BOOX Go 10.3 is an ultra-thin and lightweight monochrome ePaper device. With a 300 PPI screen, a 2.4GHz CPU, and a range of note-taking tools, capture your ideas with the flexibility to unleash your creative mind.',
-        price: '1,400,000 MMK',
+        price: '1,806,000 MMK',
         featured: false,
         badge: 'NEW',
         specs: {

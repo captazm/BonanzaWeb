@@ -1577,6 +1577,126 @@ h6 {
 }
 
 /* ========================================
+   Hero - Three.js Canvas & UI Overlays
+   ======================================== */
+#hero-three-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 0;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+}
+
+.hero-badge-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  animation: pulse-dot 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+
+#hero-device-info {
+  position: absolute;
+  bottom: var(--space-xl);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  z-index: 3;
+  pointer-events: none;
+}
+
+#hero-device-pill {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  background: rgba(7, 6, 15, 0.8);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  border-radius: var(--radius-full);
+  padding: 6px 18px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  white-space: nowrap;
+  transition: all var(--transition-base);
+}
+
+#hero-device-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.hero-pill-sep {
+  color: rgba(168, 85, 247, 0.5);
+  font-size: 12px;
+}
+
+#hero-device-price {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent-primary);
+}
+
+.hero-dot-nav {
+  display: flex;
+  gap: 6px;
+  pointer-events: all;
+}
+
+.hero-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(168, 85, 247, 0.3);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  padding: 0;
+}
+
+.hero-dot.active {
+  background: var(--accent-primary);
+  width: 20px;
+  border-radius: var(--radius-full);
+  box-shadow: 0 0 8px rgba(168, 85, 247, 0.6);
+}
+
+.hero-dot:hover:not(.active) {
+  background: rgba(168, 85, 247, 0.6);
+}
+
+.hero-drag-hint {
+  position: absolute;
+  top: calc(var(--header-height) + var(--space-md));
+  right: var(--space-xl);
+  font-size: 11px;
+  color: rgba(168, 85, 247, 0.4);
+  z-index: 3;
+  pointer-events: none;
+  letter-spacing: 0.05em;
+}
+
+@media (max-width: 768px) {
+  .hero-drag-hint { display: none; }
+  #hero-device-pill { padding: 5px 14px; }
+  #hero-device-name, #hero-device-price { font-size: 11px; }
+}
+
+/* ========================================
    Responsive Design
    ======================================== */
 @media (max-width: 1024px) {

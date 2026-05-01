@@ -3,6 +3,7 @@ import { renderHeader, initHeader } from './src/components/header.js';
 import { renderFooter } from './src/components/footer.js';
 import { renderProductDetail, initProductDetail } from './src/components/productDetail.js';
 import { renderHome } from './src/pages/home.js';
+import { initHero } from './src/components/hero.js';
 import { renderProducts, initProductsPage } from './src/pages/products.js';
 import { renderAbout } from './src/pages/about.js';
 import { renderContact, initContactPage } from './src/pages/contact.js';
@@ -135,6 +136,10 @@ async function renderPage() {
     initScrollAnimations();
 
     switch (route) {
+        case 'home':
+            initHero();
+            initProductCards();
+            break;
         case 'products':
             initProductsPage();
             initProductCards();
