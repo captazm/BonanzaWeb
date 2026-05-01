@@ -4459,6 +4459,11 @@ h6 {
 /* ========================================
    Hero - Enhanced Glow & Ring Effects
    ======================================== */
+/* Particles removed */
+.hero-particle,
+.global-particle {
+  display: none !important;
+}
 .hero-device-glow {
   filter: blur(10px) !important;
   background: radial-gradient(circle, rgba(168,85,247,0.3) 0%, rgba(124,58,237,0.15) 40%, transparent 70%) !important;
