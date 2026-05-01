@@ -33,6 +33,38 @@ function getRoute() {
 
 const ADMIN_ROUTES = ['admin', 'admin-product', 'admin-blog-form'];
 
+// ========================================
+// Global Space Particles
+// ========================================
+function initGlobalParticles() {
+  // Remove existing layer if any
+  const existing = document.getElementById('global-particles');
+  if (existing) existing.remove();
+
+  const layer = document.createElement('div');
+  layer.className = 'global-particles';
+  layer.id = 'global-particles';
+
+  const styles = ['gp-style-1', 'gp-style-2', 'gp-style-3', 'gp-style-4'];
+  for (let i = 0; i < 100; i++) {
+    const p = document.createElement('div');
+    p.className = 'global-particle ' + styles[Math.floor(Math.random() * styles.length)];
+    const size = Math.random() * 4.5 + 1.5;
+    p.style.cssText = `
+      left:${Math.random() * 100}%;
+      top:${Math.random() * 100}%;
+      width:${size}px;
+      height:${size}px;
+      animation-delay:${Math.random() * 10}s;
+      animation-duration:${Math.random() * 8 + 6}s;
+      opacity:${Math.random() * 0.5 + 0.3};
+    `;
+    layer.appendChild(p);
+  }
+
+  document.body.appendChild(layer);
+}
+
 async function renderPage() {
     const route = getRoute();
     const isAdmin = ADMIN_ROUTES.includes(route);
@@ -121,7 +153,7 @@ async function renderPage() {
       </main>
     `;
     } else {
-        app.innerHTML = `
+    app.innerHTML = `
       ${renderHeader(route)}
       <main id="main-content">
         ${pageContent}
@@ -130,6 +162,8 @@ async function renderPage() {
     `;
         // Pass renderPage as lang change callback
         initHeader(renderPage);
+        // Global space particles
+        initGlobalParticles();
     }
 
     // Initialize page-specific functionality
