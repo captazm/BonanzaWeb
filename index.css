@@ -1609,12 +1609,11 @@ h6 {
 
 #hero-device-info {
   position: absolute;
-  bottom: var(--space-xl);
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: var(--space-2xl);
+  right: 5%;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-end;
   gap: var(--space-sm);
   z-index: 3;
   pointer-events: none;
@@ -1692,6 +1691,7 @@ h6 {
 
 @media (max-width: 768px) {
   .hero-drag-hint { display: none; }
+  #hero-device-info { right: 50%; transform: translateX(50%); align-items: center; bottom: var(--space-lg); }
   #hero-device-pill { padding: 5px 14px; }
   #hero-device-name, #hero-device-price { font-size: 11px; }
 }

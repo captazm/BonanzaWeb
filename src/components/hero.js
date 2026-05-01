@@ -52,9 +52,9 @@ export function renderHero() {
 export function initHero() {
   // ── Config: ပုံနဲ့ ဈေးနှုန်း ဒီနေရာမှာပဲ ပြောင်းရုံ ──
   const devices = [
-    { name: 'BOOX Note Air 5C', price: '2,322,000 MMK', url: '/images/products/noteair5c.jpg',  aspect: 0.72 },
-    { name: 'BOOX Go 10.3',     price: '1,806,000 MMK', url: '/images/products/go103.jpg',      aspect: 0.82 },
-    { name: 'BOOX Palma 2 Pro', price: '1,763,000 MMK', url: '/images/products/palma2pro.png',  aspect: 0.52 },
+    { name: 'BOOX Note Air 5C', price: '2,322,000 MMK', url: '/images/products/noteair5c.png', aspect: 0.72 },
+    { name: 'BOOX Go 10.3',     price: '1,806,000 MMK', url: '/images/products/go103.png',     aspect: 0.82 },
+    { name: 'BOOX Palma 2 Pro', price: '1,763,000 MMK', url: '/images/products/palma2pro.png', aspect: 0.52 },
   ];
   // ──────────────────────────────────────────────────────
 
